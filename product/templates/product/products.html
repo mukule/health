@@ -1,0 +1,97 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-3">
+                <!-- Display Categories -->
+                <h5 class="card-title"><b>Categories</b></h5>
+                <ul class="list-group mb-4">
+                    {% for category in categories %}
+                        <li class="list-group-item">
+                            <a href="{% url 'product:products' %}?category={{ category.id }}">{{ category.name }}</a>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item">No Categories Available</li>
+                    {% endfor %}
+                </ul>
+                <form method="GET" class="mb-3">
+                    <div class="input-group">
+                        <input type="text" name="title" class="form-control" placeholder="Search by title">
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-primary">Search</button>
+                        </div>
+                    </div>
+                </form>
+                
+                {% if request.GET.title %}
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <a href="{% url 'product:products' %}" class="btn btn-primary">Show All</a>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="col-12 text-center mt-3">
+                    <a href="{% url 'product:create_category' %}" class="btn btn-primary">Add Product Category</a>
+                </div>
+            </div>
+            <div class="col-md-9">
+           
+                <div class="row">
+                    {% for product in products %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ product.title }}</h5>
+                                    <p class="card-text">Price: ${{ product.price }}</p>
+                                    <p class="card-text">Quantity: {{ product.quantity }}</p>
+                                    <!-- Add more fields as needed -->
+                                </div>
+                            </div>
+                        </div>
+                        {% if forloop.counter|divisibleby:3 and not forloop.last %}
+                            </div><div class="row">
+                        {% endif %}
+                    {% empty %}
+                        <div class="col-12 text-center">
+                            <p>No Products available</p>
+                        </div>
+                    {% endfor %}
+                </div>
+                <!-- Pagination Links -->
+                <div class="col-12 text-center">
+                    <ul class="pagination">
+                        {% if products.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ products.previous_page_number }}">Previous</a>
+                            </li>
+                        {% endif %}
+                        <li class="page-item disabled">
+                            <span class="page-link">Page {{ products.number }} of {{ products.paginator.num_pages }}</span>
+                        </li>
+                        {% if products.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ products.next_page_number }}">Next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ products.paginator.num_pages }}">Last</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <!-- End of Pagination Links -->
+                <div class="col-12 text-center">
+                    <a href="{% url 'product:create_product' %}" class="btn btn-primary">Add Product</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

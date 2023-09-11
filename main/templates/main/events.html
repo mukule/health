@@ -1,0 +1,49 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-flex align-items-center justify-content-between">
+                    <h3 class="mb-0 font-size-18">Dashboard >> Events</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            {% if events %}
+                {% for senior in events %}
+                    <div class="col-lg-4 col-md-6 mb-4">
+                                            
+                        <div class="card">
+                            <img src="{{ senior.event_image.url }}" class="img-fluid rounded-start" alt="{{ senior.name }}">
+                            <div class="card-body">
+                                <h5 class="card-title"> <b>{{senior.name}}</b></h5>
+                                <p class="card-text">This card has supporting text below as a natural
+                                    lead-in to additional content.</p>
+                                <p class="card-text">
+                                    <small class="text-muted">Last updated 3 mins ago</small>
+                                </p>
+                            </div>
+                        </div>
+                        </div>
+                    {% if forloop.counter|divisibleby:3 and not forloop.last %}
+                        </div><div class="row">
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <div class="col-12 text-center">
+                    <p>No Events Yet Yet</p>
+                </div>
+            {% endif %}
+            <div class="col-12 text-center">
+                <a href="{% url 'main:create_event' %}" class="btn btn-primary">Create Event</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock content %}
+

@@ -1,0 +1,101 @@
+{% load static %}
+
+<header id="page-topbar">
+    <div class="navbar-header">
+        <!-- LOGO -->
+        <div class="navbar-brand-box d-flex align-items-left">
+            <div class="navbar-brand-box d-flex align-items-left">
+                <a href="/" class="logo">
+                   <img src="{% static 'main/images/logo.png' %}" alt="logo">
+                </a>
+            </div>
+
+         
+        </div>
+
+        <div class="d-flex align-items-center">
+
+            <div class="dropdown d-inline-block">
+                <button type="button" class="btn header-item waves-effect waves-light" id="page-header-user-dropdown"
+                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <span class="d-none d-sm-inline-block ml-1">  <b>Nelson</b> </span>
+                    <i class="mdi mdi-chevron-down d-none d-sm-inline-block"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-right">
+                    
+                    <!-- item-->
+                    <a href="javascript:void(0);" class="dropdown-item notify-item">
+                        <span class="align-middle">Logout</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="dropdown d-inline-block">
+                <button type="button" class="btn header-item noti-icon waves-effect waves-light" id="page-header-notifications-dropdown"
+                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="mdi mdi-bell"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right p-0"
+                    aria-labelledby="page-header-notifications-dropdown">
+                    <div class="p-3">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h6 class="m-0"> Notifications </h6>
+                            </div>
+                            <div class="col-auto">
+                                <a href="#!" class="small"> View All</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div data-simplebar style="max-height: 230px;">
+                        <a href="" class="text-reset notification-item">
+                            <div class="media">
+                                <img src="assets/images/users/avatar-2.jpg"
+                                    class="mr-3 rounded-circle avatar-xs" alt="user-pic">
+                                <div class="media-body">
+                                    <h6 class="mt-0 mb-1">Samuel Coverdale</h6>
+                                    <p class="font-size-12 mb-1">You have new follower on Instagram</p>
+                                    <p class="font-size-12 mb-0 text-muted"><i class="mdi mdi-clock-outline"></i> 2 min ago</p>
+                                </div>
+                            </div>
+                        </a>
+                       
+                    </div>
+                    <div class="p-2 border-top">
+                        <a class="btn btn-sm btn-light btn-block text-center" href="javascript:void(0)">
+                            <i class="mdi mdi-arrow-down-circle mr-1"></i> Load More..
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-sm mr-2 font-size-16 d-lg-none header-item waves-effect waves-light" data-toggle="collapse" data-target="#topnav-menu-content">
+                <i class="fa fa-fw fa-bars"></i>
+            </button>
+            
+        </div>
+    </div>
+</header>
+
+<div class="topnav">
+    <div class="container-fluid">
+        <nav class="navbar navbar-light navbar-expand-lg topnav-menu">
+            
+            <div class="collapse navbar-collapse" id="topnav-menu-content">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'product:products' %}">
+                           Products
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'pos:index' %}">
+                           POS
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+        </nav>
+    </div>
+</div> 

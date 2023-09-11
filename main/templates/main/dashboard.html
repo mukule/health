@@ -1,0 +1,62 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-flex align-items-center justify-content-between">
+                    <h3 class="mb-0 font-size-18">Dashboard</h3>
+                </div>
+            </div>
+        </div> 
+        
+         <div class="row">
+           <div class="col-lg-3">
+           <a href="{% url 'main:hero' %}">
+            <section class="card">
+                <img src="{% static 'dashboard/images/users/users.png' %}" class="card-img" alt="...">
+                <div class="card-img-overlay d-flex align-items-center justify-content-center">
+                  <h2 class="card-title text-white">Home</h2>
+                </div>
+              </section>  
+           </a>            
+        </div>
+        <div class="col-lg-3">
+            <a href="{% url 'main:seniors' %}">
+             <section class="card">
+                 <img src="{% static 'dashboard/images/users/users.png' %}" class="card-img" alt="...">
+                 <div class="card-img-overlay d-flex align-items-center justify-content-center">
+                   <h2 class="card-title text-white">Senior Management</h2>
+                 </div>
+               </section>  
+            </a>            
+         </div>
+         <div class="col-lg-3">
+            <a href="{% url 'main:companies' %}">
+             <section class="card">
+                 <img src="{% static 'dashboard/images/users/users.png' %}" class="card-img" alt="...">
+                 <div class="card-img-overlay d-flex align-items-center justify-content-center">
+                   <h2 class="card-title text-white">Companies</h2>
+                 </div>
+               </section>  
+            </a>            
+         </div>
+
+         <div class="col-lg-3">
+            <a href="{% url 'main:events' %}">
+             <section class="card">
+                 <img src="{% static 'dashboard/images/users/users.png' %}" class="card-img" alt="...">
+                 <div class="card-img-overlay d-flex align-items-center justify-content-center">
+                   <h2 class="card-title text-white">Events</h2>
+                 </div>
+               </section>  
+            </a>            
+         </div>
+        </div>
+        <!-- end row -->
+
+    </div>
+</div>
+{% endblock content %}

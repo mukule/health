@@ -1,0 +1,61 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <!-- Filter Form -->
+                <form method="GET">
+                    <div class="input-group">
+                        <select name="category" class="custom-select">
+                            <option value="">All Categories</option>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="text" name="title" class="form-control" placeholder="Search by title">
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-primary">Filter</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            {% for product in products %}
+                <div class="col-md-2">
+                    <!-- Product Card Here -->
+                    <div class="card mb-3">
+                        <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.title }}">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ product.title }}</h5>
+                            <h5 class="card-title">In Stock:  {{ product.quantity }}</h5>
+                            <p class="card-text">Price: Ksh  {{ product.price }}</p>
+                            <!-- Add more fields as needed -->
+                        </div>
+                        <div class="card-footer text-center">
+                            <a href="#" class="btn btn-primary">
+                                <i class="fas fa-cart-plus"></i> Add to Cart
+                            </a>
+                        </div>
+                        
+                    </div>
+                </div>
+                {% if forloop.counter|divisibleby:6 and not forloop.last %}
+                    </div><div class="row justify-content-center">
+                    <div class="col-md-2">
+                        <!-- This column will create spacing between products -->
+                    </div>
+                {% endif %}
+            {% empty %}
+                <div class="col-12 text-center">
+                    <p>No Products available</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock content %}

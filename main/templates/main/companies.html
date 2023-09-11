@@ -1,0 +1,44 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-flex align-items-center justify-content-between">
+                    <h3 class="mb-0 font-size-18">Dashboard >> Companies</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            {% if companies %}
+                {% for senior in companies %}
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card">
+                            <img src="{{ senior.logo.url }}" class="img-fluid rounded-start" alt="{{ senior.name }}">
+                        </div>
+                        <div class="card card-body text-center">
+                            <blockquote class="card-bodyquote mb-0">
+                               <b>{{senior.name}}</b>
+                            </blockquote>
+                        </div>
+                    </div>
+                    {% if forloop.counter|divisibleby:3 and not forloop.last %}
+                        </div><div class="row">
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <div class="col-12 text-center">
+                    <p>No Companies</p>
+                </div>
+            {% endif %}
+            <div class="col-12 text-center">
+                <a href="{% url 'main:create_company' %}" class="btn btn-primary">Create Company</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock content %}
