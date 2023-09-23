@@ -69,6 +69,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'pos.context_processors.cart.cart_items',
             ],
         },
     },
@@ -139,7 +140,7 @@ MEDIA_URL = '/media/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.CustomUser'
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
-LOGIN_URL = 'login'
+LOGIN_URL = 'users:login'
 LOGIN_REDIRECT_URL = 'profile'
 AUTHENTICATION_BACKENDS = ['users.backends.EmailBackend']
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880

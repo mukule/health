@@ -10,12 +10,16 @@
                 <h5 class="card-title"><b>Categories</b></h5>
                 <ul class="list-group mb-4">
                     {% for category in categories %}
-                        <li class="list-group-item">
-                            <a href="{% url 'product:products' %}?category={{ category.id }}">{{ category.name }}</a>
-                        </li>
-                    {% empty %}
-                        <li class="list-group-item">No Categories Available</li>
-                    {% endfor %}
+                    <li class="list-group-item">
+                        <a href="{% url 'product:products' %}?category={{ category.id }}">{{ category.name }}</a>
+                        <span class="float-right">
+                            <a href="{% url 'product:edit_category' category.id %}">Edit</a> |
+                            <a href="{% url 'product:delete_category' category.id %}">Delete</a>
+                        </span>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item">No Categories Available</li>
+                {% endfor %}
                 </ul>
                 <form method="GET" class="mb-3">
                     <div class="input-group">
@@ -42,25 +46,31 @@
            
                 <div class="row">
                     {% for product in products %}
-                        <div class="col-md-4 mb-3">
-                            <div class="card">
-                                <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
-                                <div class="card-body">
-                                    <h5 class="card-title">{{ product.title }}</h5>
-                                    <p class="card-text">Price: ${{ product.price }}</p>
-                                    <p class="card-text">Quantity: {{ product.quantity }}</p>
-                                    <!-- Add more fields as needed -->
-                                </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card">
+                            <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ product.title }}</h5>
+                                <p class="card-text">Price: Ksh {{ product.price }}</p>
+                                <p class="card-text">Quantity: {{ product.quantity }}</p>
+                                <!-- Add more fields as needed -->
+                
+                                <!-- Edit Product Link -->
+                                <a href="{% url 'product:edit_product' product.id %}" class="btn btn-primary">Edit</a>
+                                <!-- Delete Product Link -->
+                                <a href="{% url 'product:delete_product' product.id %}" class="btn btn-danger">Delete</a>
                             </div>
                         </div>
-                        {% if forloop.counter|divisibleby:3 and not forloop.last %}
-                            </div><div class="row">
-                        {% endif %}
-                    {% empty %}
-                        <div class="col-12 text-center">
-                            <p>No Products available</p>
-                        </div>
-                    {% endfor %}
+                    </div>
+                    {% if forloop.counter|divisibleby:3 and not forloop.last %}
+                        </div><div class="row">
+                    {% endif %}
+                {% empty %}
+                    <div class="col-12 text-center">
+                        <p>No Products available</p>
+                    </div>
+                {% endfor %}
+                
                 </div>
                 <!-- Pagination Links -->
                 <div class="col-12 text-center">

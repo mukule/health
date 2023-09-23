@@ -1,0 +1,47 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-flex align-items-center justify-content-between">
+                    <h4 class="mb-0 font-size-18"> Stock take ID :{{stock.id}} >> taken on {{stock.stock_date}} >> Product :{{stock_product}}</h4>
+                    
+                </div>
+            </div>
+        </div>  
+        
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="card">
+                    <div class="card-body alert-info">
+                        <h4 class="card-title mb-4">Update the Quantities for {{stock_product}}</h4>
+                        <form method="post">
+                            {% csrf_token %}
+                            {{ form.as_p }}
+                            <button type="submit">Update Quantity</button>
+                          </form>
+                          <a href="{% url 'product:stock_detail' stock.id %}">Back to Stock Take Detail</a>
+                       
+                        </div>
+
+                    </div>
+                    <!-- end card-body-->
+                </div>
+                <!-- end card -->
+
+            </div>
+            <!-- end col -->
+
+
+           
+            <!-- end col -->
+        </div>
+        
+    </div>
+</div>
+{% endblock content %}
+
+

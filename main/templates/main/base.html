@@ -58,7 +58,136 @@
             });
         });
     </script>
-    
+
+<script>
+    // Parse the JSON data passed from Django view
+    var salesData = JSON.parse('{{ sales_data_json|escapejs }}');
+
+    var ctx = document.getElementById('salesBarChart').getContext('2d');
+    var salesBarChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: salesData.sale_ids,
+            datasets: [{
+                label: 'Total Amount',
+                data: salesData.total_amounts,
+                backgroundColor: '#f5772b', // Change the bar color to #f5772b
+                borderColor: '#f5772b',     // Change the border color to #f5772b
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { // x-axis options
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Sales' // Label for the x-axis
+                    }
+                },
+                y: { // y-axis options
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Total Amount (Ksh)'
+                    }
+                }
+            },
+            legend: {
+                display: false,
+            },
+            title: {
+                display: true,
+                text: 'Total Sales Amounts for the Current Date',
+                position: 'top',
+                fontSize: 16,
+            },
+            plugins: {
+                datalabels: {
+                    formatter: (value, context) => {
+                        return 'Ksh ' + value.toFixed(2);
+                    },
+                    color: '#000',
+                    anchor: 'end',
+                    align: 'end',
+                },
+            },
+        }
+    });
+</script>
+
+<script>
+    // Parse the JSON data passed from Django view
+    var salesData = JSON.parse('{{ sales_data|escapejs }}');
+
+    // Extract labels (days of the week) and sales amounts from the JSON data
+    var labels = salesData.map(function(item) {
+        return item.day_of_week;
+    });
+
+    var salesAmounts = salesData.map(function(item) {
+        return parseFloat(item.sales_amount);
+    });
+
+    // Define an array of colors for each day
+    var barColors = ['#f5772b', '#2bf577', '#f52b77', '#77f52b', '#2b77f5', '#f5772b', '#777777'];
+
+    var ctx = document.getElementById('salesBarChart').getContext('2d');
+    var salesBarChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,  // Use extracted labels
+            datasets: [{
+                label: 'Total Amount',
+                data: salesAmounts,  // Use extracted sales amounts
+                backgroundColor: barColors,  // Use the array of colors
+                borderColor: barColors,      // Use the array of colors
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { // x-axis options
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Day of the Week' // Label for the x-axis
+                    }
+                },
+                y: { // y-axis options
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Total Amount (Ksh)'
+                    }
+                }
+            },
+            legend: {
+                display: false,
+            },
+            title: {
+                display: true,
+                text: 'Total Sales Amounts for Each Day of the Week (Weekly Total: Ksh {{ total_sales_week }})', // Add weekly total
+                position: 'top',
+                fontSize: 16,
+            },
+            plugins: {
+                datalabels: {
+                    formatter: (value, context) => {
+                        return 'Ksh ' + value.toFixed(2);
+                    },
+                    color: '#000',
+                    anchor: 'end',
+                    align: 'end',
+                },
+            },
+        }
+    });
+</script>
 
 </body>
 </html>

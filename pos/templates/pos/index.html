@@ -2,6 +2,21 @@
 {% load static %}
 
 {% block content %}
+<style>
+    .custom-card-group {
+        margin-right: 0px; /* Adjust as needed */
+        margin-left: 0px;  /* Adjust as needed */
+    }
+
+    .custom-card {
+        padding: 0px; /* Adjust as needed */
+    }
+
+    .custom-card-body {
+        padding: 5px;
+        font-size: 10px; /* Adjust as needed */
+    }
+</style>
 <div class="page-content">
     <div class="container-fluid">
         <div class="row mb-4">
@@ -23,38 +38,108 @@
                 </form>
             </div>
         </div>
+        <div class="row">
+            <div class="col-md-8">
+                <h2>Products</h2>
+                <div class="card-group custom-card-group">
+                    {% for product in products %}
+                    <div class="col-md-2 custom-card">
+                        <!-- Product Card Here -->
+                       <a href="{% url 'pos:add_cart' product.id %}">
+                        <div class="card mb-0">
+                            <img src="{{ product.image.url }}" class="card-img-top img-fluid" alt="{{ product.title }}">
+                            <div class="card-body custom-card-body text-center">
+                                <p class="card-text mb-0">{{ product.title }}</p>
+                                <p class="card-text mb-0">In Stock: {{ product.quantity }}</p>
+                                <p class="card-text">Ksh {{ product.price }}</p>
+                                <!-- Add more fields as needed -->
+                            </div>
+                        </div>
+                       </a>
+                    </div>
+                    {% if forloop.counter|divisibleby:6 %}
+                    </div>
+                    <div class="card-group custom-card-group">
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
 
-        <div class="row justify-content-center">
-            {% for product in products %}
-                <div class="col-md-2">
-                    <!-- Product Card Here -->
-                    <div class="card mb-3">
-                        <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.title }}">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ product.title }}</h5>
-                            <h5 class="card-title">In Stock:  {{ product.quantity }}</h5>
-                            <p class="card-text">Price: Ksh  {{ product.price }}</p>
-                            <!-- Add more fields as needed -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        Cart ({{ count }})
+                    </div>
+                    <div class="card-body">
+                       
+            
+                        <!-- Iterate over cart items -->
+                        {% for item in cart %}
+                        <div class="row mb-3">
+                            <!-- Product Image Column (4 cols) -->
+                            <!-- You can add the product image here if needed -->
+            
+                            <!-- Product Name and Quantity Column (6 cols) -->
+                            <div class="col-md-8">
+                                <h5>{{ item.product.title }}</h5>
+                                <p>Products Remaining: {{ item.product.quantity }}</p>
+                            </div>
+            
+                            <!-- Product Price Column (2 cols) -->
+                            <div class="col-md-4 text-right">
+                                <p>Ksh {{ item.product.price }}</p>
+                            </div>
                         </div>
-                        <div class="card-footer text-center">
-                            <a href="#" class="btn btn-primary">
-                                <i class="fas fa-cart-plus"></i> Add to Cart
-                            </a>
+                        <div class="row text-center mb-3">
+                            <div class="col-md-6">
+                                <a href="{% url 'pos:remove_cart_item' item.id %}" class="btn btn-primary waves-effect waves-light">Remove</a>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="btn-group btn-group-lg" role="group" aria-label="Large button group">
+                                    <a href="{% url 'pos:decrement_cart_item' item.id %}" class="btn btn-primary waves-effect waves-light"> - </a>
+                                    <button type="button" class="btn btn-primary waves-effect">{{ item.quantity }}</button>
+                                    <a href="{% url 'pos:increment_cart_item' item.id %}" class="btn btn-primary waves-effect waves-light"> + </a>
+                                </div>
+                            </div>
                         </div>
-                        
+                        {% endfor %}
+                        <!-- End Iteration -->
+                    </div>
+                    <div class="card-footer text-center">
+                        <button type="button" class="btn btn-primary waves-effect waves-light" data-toggle="modal" data-target="#checkoutModal">
+                            Grand total (Ksh  {{ total }})
+                        </button>
                     </div>
                 </div>
-                {% if forloop.counter|divisibleby:6 and not forloop.last %}
-                    </div><div class="row justify-content-center">
-                    <div class="col-md-2">
-                        <!-- This column will create spacing between products -->
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+
+<!-- Checkout Modal -->
+<div class="modal fade" id="checkoutModal" tabindex="-1" role="dialog" aria-labelledby="checkoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header text-center">
+                <!-- Centered row for icon -->
+                <div class="row justify-content-center">
+                    <div class="col-12">
+                        <i class="fas fa-exclamation-circle fa-5x text-danger"></i>
                     </div>
-                {% endif %}
-            {% empty %}
-                <div class="col-12 text-center">
-                    <p>No Products available</p>
                 </div>
-            {% endfor %}
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to Complete a Sale of  <b>ksh  {{ total }}</b>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <a href="{% url 'pos:checkout'%}" class="btn btn-primary">Confirm</a>
+            </div>
         </div>
     </div>
 </div>

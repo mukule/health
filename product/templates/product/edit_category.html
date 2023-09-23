@@ -1,0 +1,26 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow-lg p-3 mb-5 bg-white rounded">
+                    <div class="card-body">
+                        <h2 class="card-title text-center">Edit {{category.name}} category</h2>
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="{{ form.name.id_for_label }}">Category Name</label>
+                                {{ form.name }}
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">Submit Changes</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

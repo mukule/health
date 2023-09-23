@@ -15,58 +15,63 @@
 
         <div class="d-flex align-items-center">
 
+            {% if user.is_authenticated %}
             <div class="dropdown d-inline-block">
                 <button type="button" class="btn header-item waves-effect waves-light" id="page-header-user-dropdown"
                     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <span class="d-none d-sm-inline-block ml-1">  <b>Nelson</b> </span>
+                    <span class="d-none d-sm-inline-block ml-1"><b>{{ user.username }}</b></span>
                     <i class="mdi mdi-chevron-down d-none d-sm-inline-block"></i>
                 </button>
                 <div class="dropdown-menu dropdown-menu-right">
-                    
                     <!-- item-->
-                    <a href="javascript:void(0);" class="dropdown-item notify-item">
+                    <a href="{% url 'users:logout' %}" class="dropdown-item notify-item">
                         <span class="align-middle">Logout</span>
                     </a>
                 </div>
             </div>
+            {% endif %}
+            
 
             <div class="dropdown d-inline-block">
                 <button type="button" class="btn header-item noti-icon waves-effect waves-light" id="page-header-notifications-dropdown"
                     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <i class="mdi mdi-bell"></i>
+                    <i class="mdi mdi-cart"></i>
+                    <span class="badge badge-danger badge-pill"> {{ count }} </span>
                 </button>
                 <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right p-0"
-                    aria-labelledby="page-header-notifications-dropdown">
-                    <div class="p-3">
-                        <div class="row align-items-center">
-                            <div class="col">
-                                <h6 class="m-0"> Notifications </h6>
-                            </div>
-                            <div class="col-auto">
-                                <a href="#!" class="small"> View All</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div data-simplebar style="max-height: 230px;">
-                        <a href="" class="text-reset notification-item">
-                            <div class="media">
-                                <img src="assets/images/users/avatar-2.jpg"
-                                    class="mr-3 rounded-circle avatar-xs" alt="user-pic">
-                                <div class="media-body">
-                                    <h6 class="mt-0 mb-1">Samuel Coverdale</h6>
-                                    <p class="font-size-12 mb-1">You have new follower on Instagram</p>
-                                    <p class="font-size-12 mb-0 text-muted"><i class="mdi mdi-clock-outline"></i> 2 min ago</p>
-                                </div>
-                            </div>
-                        </a>
-                       
-                    </div>
-                    <div class="p-2 border-top">
-                        <a class="btn btn-sm btn-light btn-block text-center" href="javascript:void(0)">
-                            <i class="mdi mdi-arrow-down-circle mr-1"></i> Load More..
-                        </a>
-                    </div>
-                </div>
+                aria-labelledby="page-header-notifications-dropdown">
+               <div class="p-3">
+                   <div class="row align-items-center">
+                       <div class="col">
+                           <h6 class="m-0">Items in your cart</h6>
+                       </div>
+                       <div class="col-auto">
+                           <a href="#!" class="small">View All</a>
+                       </div>
+                   </div>
+               </div>
+               <div data-simplebar style="max-height: 230px;">
+                   {% if cart_items %}
+                       {% for cart_item in cart_items %}
+                           <a href="{% url 'pos:cart' %}" class="text-reset notification-item">
+                               <div class="media">
+                                   <div class="media-body">
+                                       <h6 class="mt-0 mb-1">{{ cart_item.product.title }}     {{ cart_item.quantity }}</h6>
+                                   </div>
+                               </div>
+                           </a>
+                       {% endfor %}
+                   {% else %}
+                       <p class="text-center">No items in the cart</p>
+                   {% endif %}
+               </div>
+               <div class="p-2 border-top">
+                   <a class="btn btn-sm btn-light btn-block text-center" href="{% url 'pos:cart' %}">
+                       <i class="mdi mdi-arrow-down-circle mr-1"></i> View Cart
+                   </a>
+               </div>
+           </div>
+           
             </div>
 
             <button type="button" class="btn btn-sm mr-2 font-size-16 d-lg-none header-item waves-effect waves-light" data-toggle="collapse" data-target="#topnav-menu-content">
@@ -91,6 +96,37 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'pos:index' %}">
                            POS
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'pos:sales' %}">
+                           Today Sales
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'pos:sales_h' %}">
+                           sales
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'product:stock' %}">
+                           Stock
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'product:low_stock' %}">
+                           Running out
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'product:out_of_stock' %}">
+                           Out of Stock
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'product:stocks' %}">
+                           Stock Update
                         </a>
                     </li>
 

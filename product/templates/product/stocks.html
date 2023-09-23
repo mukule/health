@@ -1,0 +1,75 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-flex align-items-center justify-content-between">
+                    <h4 class="mb-0 font-size-18">Stock Take History</h4>
+
+                    
+                </div>
+            </div>
+        </div>  
+        
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="card">
+                    <div class="card-body alert-info">
+                        <h4 class="card-title mb-4">Select / Create stock to take action</h4>
+                        
+                        <div class="table-responsive">
+                            <table class="table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Stock Date</th>
+                                        <th>Stock taken by</th>
+                                        <th>Products Counted</th>
+                                        <th>Stock Balanced</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if stocks %}
+                                        {% for stock in stocks %}
+                                        <tr>
+                                            <td>{{ stock.id }}</td>
+                                            <td><a href="{% url 'product:stock_detail' stock.id %}">{{ stock.stock_date }}</a></td>
+                                            <td>{{ stock.user }}</td>
+                                            <td>{{ stock.stocktakeitem_set.count }}</td>
+                                            <td>{{ stock.stock_balanced }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="5">No stock taken yet</td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                            <div class="col-12 text-center">
+                                <a href="{% url 'product:create_stock_take' %}" class="btn btn-primary">Create New Stock</a>
+                            </div>
+                             
+                        </div>
+
+                    </div>
+                    <!-- end card-body-->
+                </div>
+                <!-- end card -->
+
+            </div>
+            <!-- end col -->
+
+
+           
+            <!-- end col -->
+        </div>
+        
+    </div>
+</div>
+{% endblock content %}
+
+

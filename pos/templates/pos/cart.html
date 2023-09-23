@@ -1,0 +1,123 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container">
+        {% if cart %}
+        <div class="row">
+            <div class="col-lg-8">
+               
+                    <div class="card">
+                        <div class="card-header">
+                            Cart ({{ count }})
+                        </div>
+                        <div class="card-body">
+                            <h4 class="card-title">Cart Items</h4>
+                            
+                            <!-- Iterate over cart items -->
+                            {% for item in cart %}
+                                <div class="row mb-3">
+                                    <!-- Product Image Column (4 cols) -->
+                                    <div class="col-md-2">
+                                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="img-fluid" width="100" height="100">
+                                    </div>
+                                    
+                                    <!-- Product Name and Quantity Column (6 cols) -->
+                                    <div class="col-md-6">
+                                        <h5>{{ item.product.title }}</h5>
+                                        <p>Products Remaining: {{ item.product.quantity }}</p>
+                                    </div>
+                                    
+                                    <!-- Product Price Column (2 cols) -->
+                                    <div class="col-md-4 text-right">
+                                        <p>Ksh  {{ item.product.price }}</p>
+                                    </div>
+                                </div>
+                                <div class="row text-center mb-3">
+                                    <div class="col-md-6">
+                                        <a href="{% url 'pos:remove_cart_item' item.id %}" class="btn btn-primary waves-effect waves-light">Remove</a>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="btn-group btn-group-lg" role="group" aria-label="Large button group">
+                                            <a href="{% url 'pos:decrement_cart_item' item.id %}" class="btn btn-primary waves-effect waves-light"> - </a>
+                                            <button type="button" class="btn btn-primary waves-effect">{{ item.quantity }}</button>
+                                            <a href="{% url 'pos:increment_cart_item' item.id %}" class="btn btn-primary waves-effect waves-light"> + </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                            <!-- End Iteration -->
+                          
+                        </div>
+                    </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        Cart Summary
+                    </div>
+                    <div class="card-body">
+                       <div class="row">
+                        <div class="col-md-6">
+                            <b>Subtotal</b>
+                        </div>
+                        <div class="col-md-6">
+                            <b> Ksh {{ total }}</b>
+                        </div>
+                       </div>
+                    </div>
+                    <div class="card-footer text-center">
+                        <button type="button" class="btn btn-primary waves-effect waves-light" data-toggle="modal" data-target="#checkoutModal">
+                            Checkout (Ksh  {{ total }})
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-body">
+                        <i class="fas fa-shopping-cart text-warning fa-5x mb-3"></i>
+                      <h1>  Nothing added to the basket to sell !!</h1>
+                      <p>Browse Categories to add items to the basket</p>
+                        <a href="{% url 'pos:index' %}" class="btn btn-primary">Browse Products</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    {% endif %}
+    </div>
+</div>
+
+<!-- Checkout Modal -->
+<div class="modal fade" id="checkoutModal" tabindex="-1" role="dialog" aria-labelledby="checkoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header text-center">
+                <!-- Centered row for icon -->
+                <div class="row justify-content-center">
+                    <div class="col-12">
+                        <i class="fas fa-exclamation-circle fa-5x text-danger"></i>
+                    </div>
+                </div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to Complete a Sale of  <b>ksh  {{ total }}</b>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <a href="{% url 'pos:checkout'%}" class="btn btn-primary">Confirm</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}

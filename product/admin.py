@@ -4,3 +4,12 @@ from .models import *
 # Register y
 admin.site.register(Category)
 admin.site.register(Product)
+admin.site.register(Cart)
+admin.site.register(Sale)
+admin.site.register(SaleItem)
+admin.site.register(Year)
+admin.site.register(Month)
+admin.site.register(Week)
+admin.site.register(Day)
+admin.site.register(StockTake)
+admin.site.register(StockTakeItem)

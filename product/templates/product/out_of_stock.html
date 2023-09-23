@@ -1,0 +1,70 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-flex align-items-center justify-content-between">
+                    <h4 class="mb-0 font-size-18">Products out of stock</h4>
+
+                    
+                </div>
+            </div>
+        </div>  
+        
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="card">
+                    <div class="card-body alert-danger">
+                        <h4 class="card-title mb-4">{{ products_count }} are out of Stock</h4>
+                        
+                        <div class="table-responsive">
+                            <table class="table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>PRODUCT</th>
+                                        <th>CATEGORY</th>
+                                        <th>PRICE</th>
+                                        <th>CREATED AT</th>
+                                        <th>LAST UPDATED</th>
+                                        <th>QUANTITY</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for product in products %}
+                                    <tr>
+                                        <td>{{ product.id }}</td>
+                                        <td>{{ product.title }}</td>
+                                        <td>{{ product.category }}</td>
+                                        <td>{{ product.price }}</td>
+                                        <td>{{ product.created_at }}</td>
+                                        <td>{{ product.updated_at }}</td>
+                                        <td>{{ product.quantity }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            
+                        </div>
+
+                    </div>
+                    <!-- end card-body-->
+                </div>
+                <!-- end card -->
+
+            </div>
+            <!-- end col -->
+
+
+           
+            <!-- end col -->
+        </div>
+        
+    </div>
+</div>
+{% endblock content %}
+
+
