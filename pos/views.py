@@ -76,6 +76,7 @@ def period(request):
 
     return HttpResponse(status=200)
 
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 @login_required
 def index(request):
@@ -101,24 +102,38 @@ def index(request):
     user_cart = Cart.objects.filter(user=request.user).first()
 
     if user_cart:
-            # Calculate the total cost of items in the cart
-            total_cost = user_cart.cartitem_set.aggregate(total_cost=Sum(models.F('product__price') * models.F('quantity')))['total_cost'] or 0.0
+        # Calculate the total cost of items in the cart
+        total_cost = user_cart.cartitem_set.aggregate(total_cost=Sum(models.F('product__price') * models.F('quantity')))['total_cost'] or 0.0
 
-            # Update the total_cost field in the Cart model
-            user_cart.total_cost = total_cost
-            user_cart.save()
+        # Update the total_cost field in the Cart model
+        user_cart.total_cost = total_cost
+        user_cart.save()
 
-            # Retrieve the cart items associated with the cart
-            cart_items = user_cart.cartitem_set.all()
+        # Retrieve the cart items associated with the cart
+        cart_items = user_cart.cartitem_set.all()
 
-            context = {
-                'cart': cart_items,
-                'total': user_cart.total_cost,
-                'products': products,
-                'categories': categories,
-            }
+    # Paginate the products with 6 products per page
+    paginator = Paginator(products, 24)
+    page = request.GET.get('page')
+
+    try:
+        products = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page
+        products = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g., 9999), deliver last page of results
+        products = paginator.page(paginator.num_pages)
+
+    context = {
+        'cart': cart_items,
+        'total': user_cart.total_cost,
+        'products': products,
+        'categories': categories,
+    }
 
     return render(request, 'pos/index.html', context)
+
 
 
 @login_required

@@ -4,7 +4,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .forms import *
 from django.contrib import messages
 
-# Create your views here.
+
 def index(request):
     # Retrieve all categories
     categories = Category.objects.all()
@@ -14,6 +14,15 @@ def index(request):
 
     # Handle search filter by title
     title_filter = request.GET.get('title')
+    
+    # Check if a category filter is specified in the URL
+    category_id = request.GET.get('category')
+    if category_id:
+        selected_category = get_object_or_404(Category, id=category_id)
+        products_list = products_list.filter(category=selected_category)
+    else:
+        selected_category = None
+
     if title_filter:
         products_list = products_list.filter(title__icontains=title_filter)
 
@@ -30,4 +39,14 @@ def index(request):
         # If page is out of range (e.g., 9999), deliver last page of results
         products = paginator.page(paginator.num_pages)
 
-    return render(request, 'main/index.html', {'categories': categories, 'products': products})
+    # Retrieve the first 10 products with the highest quantities
+    top_10_products = Product.objects.order_by('-quantity')[:10]
+
+    context = {
+        'categories': categories,
+        'products': products,
+        'top_10_products': top_10_products,
+        'selected_category': selected_category,  # Add the selected category to the context
+    }
+
+    return render(request, 'main/index.html', context)
