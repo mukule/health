@@ -35,6 +35,14 @@
     <div class="col-md-3">
         <!-- Display Categories -->
         <h5 class="card-title text-center"><b>Categories</b></h5>
+        <form method="GET" class="mb-3">
+            <div class="input-group">
+                <input type="text" name="title" class="form-control form-control-lg" placeholder="Search by title">
+                <div class="input-group-append">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+            </div>
+        </form>
         <ul class="list-group mb-4">
             {% for category in categories %}
                 <li class="list-group-item text-center">
@@ -44,14 +52,7 @@
                 <li class="list-group-item">No Categories Available</li>
             {% endfor %}
         </ul>
-        <form method="GET" class="mb-3">
-            <div class="input-group">
-                <input type="text" name="title" class="form-control" placeholder="Search by title">
-                <div class="input-group-append">
-                    <button type="submit" class="btn btn-primary">Search</button>
-                </div>
-            </div>
-        </form>
+       
         
         {% if request.GET.title %}
         <div class="row">
