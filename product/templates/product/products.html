@@ -52,6 +52,13 @@
                             <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 168px; object-fit: cover;">
                             <div class="card-body">
                                 <h5 class="card-title">{{ product.title }}</h5>
+                                {% if product.brand %}
+                                <p class="card-text">Brand: {{ product.brand }}</p>
+                                {% endif %}
+                                <!-- Display Units if not null -->
+                                {% if product.units %}
+                                <p class="card-text">Units: {{ product.units }}</p>
+                                {% endif %}
                                 <p class="card-text">Price: Ksh {{ product.price }}</p>
                                 <p class="card-text">Quantity: {{ product.quantity }}</p>
                                 <!-- Add more fields as needed -->

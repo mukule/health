@@ -50,6 +50,13 @@
                                 <img src="{{ product.image.url }}" class="card-img-top img-fluid" alt="{{ product.title }}" style="height: 50px; object-fit: cover;">
                                 <div class="card-body custom-card-body text-center">
                                     <p class="card-text mb-0">{{ product.title }}</p>
+                                    {% if product.brand %}
+                                    <p class="card-text">Brand: {{ product.brand }}</p>
+                                    {% endif %}
+                                    <!-- Display Units if not null -->
+                                    {% if product.units %}
+                                    <p class="card-text">Units: {{ product.units }}</p>
+                                    {% endif %}
                                     <p class="card-text mb-0">In Stock: {{ product.quantity }}</p>
                                     <p class="card-text">Ksh {{ product.price }}</p>
                                     <!-- Add more fields as needed -->
