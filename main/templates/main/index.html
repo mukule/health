@@ -2,68 +2,139 @@
 {% load static %}
 
 {% block content %}
-<div id="carouselExampleCaption" class="carousel slide" data-ride="carousel">
-    <div class="carousel-inner" role="listbox">
-        {% for product in top_10_products %}
-        <div class="carousel-item {% if forloop.first %}active{% endif %}">
-            <img src="{{ product.image.url }}" alt="{{ product.title }}" class="d-block img-fluid" style="width: 100%; height: 450px; object-fit: cover;">
-            <div class="carousel-caption d-block">
-                <div style="background-color: rgba(0, 0, 0, 0.7); padding: 30px; display: inline-block; border-radius: 10px;">
-                    <h3 class="text-white">{{ product.title }}</h3>
-                    <a href="https://wa.me/+254106770531?text=I%20want%20to%20order%20{{ product.title }}" class="btn btn-primary" style="border-radius: 10px;">
-                        <i class="fab fa-whatsapp"></i> Order via WhatsApp
+
+<div class="container-fluid">
+    <div class="row justify-content-center mt-2">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                   <div class="row">
+                    <div class="col-md-4">
+                        <h4 class="card-title">Health Today</h4>
+                                        <p class="card-subtitle mb-4">
+                                            Order Online By Whatsapp
+                                        </p>
+                    </div>
+                   <div class="col-md-8">
+                    <form method="GET" class="mb-3">
+                        <div class="d-flex">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                </div>
+                                <input type="text" name="title" class="form-control form-control-lg" placeholder="Search Products Brands and Categories">
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary ml-2">Search</button>
+                        </div>
+                    </form>
+    
+                    {% if request.GET.title %}
+                    <div class="row">
+                        <div class="col-12 text-center">
+                            <a href="{% url 'main:index' %}" class="btn btn-primary">Show All</a>
+                        </div>
+                    </div>
+                    {% endif %}
+                   </div>
+                   </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <ul class="list-group mb-4 border-0">
+                        {% for category in categories %}
+                            <li class="list-group-item text-center border-0">
+                                <a href="{% url 'main:index' %}?category={{ category.id }}">{{ category.name }}</a>
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item border-0">No Categories Available</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <div id="carouselExampleCaption" class="carousel slide" data-ride="carousel">
+                <div class="carousel-inner" role="listbox">
+                    {% for product in top_10_products %}
+                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                            <div style="position: relative;">
+                                <img src="{{ product.image.url }}" alt="{{ product.title }}" class="d-block img-fluid" style="width: 100%; height: 450px; object-fit: cover; border-radius: 10px;">
+                                <div class="carousel-caption d-block">
+                                    <div style="background-color: rgba(0, 0, 0, 0.7); padding: 30px; display: inline-block; border-radius: 10px;">
+                                        <h3 class="text-white">{{ product.title }}</h3>
+                                        <a href="https://wa.me/+254106770531?text=I%20want%20to%20order%20{{ product.title }}" class="btn btn-success" style="border-radius: 10px;">
+                                            <i class="fab fa-whatsapp"></i> Order via WhatsApp
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <a class="carousel-control-prev" href="#carouselExampleCaption" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Previous</span>
+                </a>
+                <a class="carousel-control-next" href="#carouselExampleCaption" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Next</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+   
+    <div id="categoryCarousel" class="carousel slide mt-2" data-ride="false">
+        <div class="carousel-inner">
+            {% for category in categories %}
+                {% if forloop.counter0|divisibleby:6 %}
+                    {% if forloop.counter0 == 0 %}
+                        <div class="carousel-item active">
+                    {% else %}
+                        <div class="carousel-item">
+                    {% endif %}
+                    <div class="row">
+                {% endif %}
+                
+                <div class="col-md-2">
+                    <a href="{% url 'main:index' %}?category={{ category.id }}" style="text-decoration: none;">
+                        <div class="card bg-success border-success text-center">
+                            <div class="card-body text-center">
+                                <p class="text-white">{{ category.name }}</p>
+                            </div>
+                        </div>
                     </a>
                 </div>
-            </div>
-            
+                
+                {% if forloop.counter|divisibleby:6 or forloop.last %}
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
         </div>
-        {% endfor %}
+        <a class="carousel-control-prev" href="#categoryCarousel" role="button" data-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+        </a>
+        <a class="carousel-control-next" href="#categoryCarousel" role="button" data-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+        </a>
     </div>
-    <a class="carousel-control-prev" href="#carouselExampleCaption" role="button" data-slide="prev">
-        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-        <span class="sr-only">Previous</span>
-    </a>
-    <a class="carousel-control-next" href="#carouselExampleCaption" role="button" data-slide="next">
-        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-        <span class="sr-only">Next</span>
-    </a>
-</div>
-<div class="container-fluid">
+    
+    
     
 
-<div class="row mt-4">
-    <div class="col-md-3">
-        <!-- Display Categories -->
-        <h5 class="card-title text-center"><b>Categories</b></h5>
-        <form method="GET" class="mb-3">
-            <div class="input-group">
-                <input type="text" name="title" class="form-control form-control-lg" placeholder="Search by title">
-                <div class="input-group-append">
-                    <button type="submit" class="btn btn-primary">Search</button>
-                </div>
-            </div>
-        </form>
-        <ul class="list-group mb-4">
-            {% for category in categories %}
-                <li class="list-group-item text-center">
-                    <a href="{% url 'main:index' %}?category={{ category.id }}">{{ category.name }}</a>
-                </li>
-            {% empty %}
-                <li class="list-group-item">No Categories Available</li>
-            {% endfor %}
-        </ul>
-       
-        
-        {% if request.GET.title %}
-        <div class="row">
-            <div class="col-12 text-center">
-                <a href="{% url 'main:index' %}" class="btn btn-primary">Show All</a>
-            </div>
-        </div>
-        {% endif %}
-     
-    </div>
-    <div class="col-md-9">
+<div class="row mt-2">
+    <div class="col-md-12">
    
         <div class="row">
             {% for product in products %}

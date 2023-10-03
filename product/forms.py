@@ -13,14 +13,17 @@ class CategoryForm(forms.ModelForm):
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['title', 'price', 'image', 'category', 'quantity']  # Include 'quantity' field
+        fields = ['product_code', 'title', 'price', 'image', 'category', 'quantity', 'units', 'brand']  # Include 'product_code' and 'units' fields
 
     widgets = {
+        'product_code': forms.TextInput(attrs={'class': 'form-control'}),
         'title': forms.TextInput(attrs={'class': 'form-control'}),
         'price': forms.NumberInput(attrs={'class': 'form-control'}),
         'image': forms.ClearableFileInput(attrs={'class': 'form-control-file', 'accept': 'image/*'}),
         'category': forms.Select(attrs={'class': 'form-control'}),
-        'quantity': forms.NumberInput(attrs={'class': 'form-control'}),  # Add widget for 'quantity' field
+        'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
+        'units': forms.TextInput(attrs={'class': 'form-control'}),  # Add widget for 'units' field
+        'brand': forms.TextInput(attrs={'class': 'form-control'}),
     }
 
 class StockTakeItemForm(forms.ModelForm):

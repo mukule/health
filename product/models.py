@@ -5,7 +5,11 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from users.models import *
 
+from django.db import models
+from django.db.models import Q, UniqueConstraint
+
 class Product(models.Model):
+    product_code = models.CharField(max_length=50, unique=True, null=True)
     title = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     image = models.ImageField(upload_to='products/', null=True, blank=True, default='default/user.jpg')
@@ -13,9 +17,21 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     quantity = models.IntegerField(default=0)
+    units = models.CharField(max_length=50, null=True)
+    brand = models.CharField(max_length=50, null=True) 
 
     def __str__(self):
         return self.title
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=['product_code'],
+                condition=Q(product_code__isnull=False),
+                name='unique_product_code'
+            )
+        ]
+
 
 
 class Category(models.Model):

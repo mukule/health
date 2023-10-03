@@ -13,8 +13,19 @@
                         <form method="post" enctype="multipart/form-data">
                             {% csrf_token %}
                             <div class="row">
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     {{ form.title|as_crispy_field }}
+                                </div>
+                                <div class="col-md-4">
+                                    {{ form.product_code|as_crispy_field }}
+                                </div>
+                                <div class="col-md-4">
+                                    {{ form.brand|as_crispy_field }}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {{ form.units|as_crispy_field }}
                                 </div>
                                 <div class="col-md-6">
                                     {{ form.category|as_crispy_field }}
@@ -31,7 +42,7 @@
                                     {{ form.image|as_crispy_field }}
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-primary btn-block">Add Product</button>
+                            <button type="submit" class="btn btn-primary btn-block">Save Changes</button>
                         </form>
                     </div>
                 </div>
