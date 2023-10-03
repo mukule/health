@@ -143,16 +143,23 @@
                         <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 168px; object-fit: cover;">
                         <div class="card-body">
                             <h5 class="card-title">{{ product.title }}</h5>
+                             <!-- Display Brand if not null -->
+                            {% if product.brand %}
+                            <p class="card-text">Brand: {{ product.brand }}</p>
+                            {% endif %}
+                            <!-- Display Units if not null -->
+                            {% if product.units %}
+                            <p class="card-text">Units: {{ product.units }}</p>
+                            {% endif %}
+                                                    
                             <p class="card-text">Price: Ksh  {{ product.price }}</p>
                             <p class="card-text">Quantity: {{ product.quantity }}</p>
-                            <!-- Add more fields as needed -->
                         </div>
                         <div class="card-footer text-center">
                             <a href="https://wa.me/+254106770531?text=I%20want%20to%20order%20{{ product.title }}" class="btn btn-primary">
                                 <i class="fab fa-whatsapp"></i> Order via WhatsApp
                             </a>
                         </div>
-                        
                     </div>
                 </div>
                 {% if forloop.counter|divisibleby:3 and not forloop.last %}
@@ -164,7 +171,7 @@
                 </div>
             {% endfor %}
         </div>
-
+        
             <!-- Pagination Links (Centered) -->
             <div class="col-12 text-center">
                 <ul class="pagination pagination-lg d-flex justify-content-center">
