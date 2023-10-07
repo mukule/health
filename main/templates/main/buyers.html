@@ -1,0 +1,52 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-12">
+                <div class="card shadow-lg p-3 mb-5 bg-white rounded">
+                    <div class="card-body">
+                        <h2 class="card-title text-center">Buyers</h2>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>First Name</th>
+                                        <th>Last Name</th>
+                                        <th>Phone Number</th>
+                                        <th>Loyalty Points</th>
+                                        <th>Date Created</th>
+                                        <!-- Add more columns if needed -->
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for buyer in buyers %}
+                                    <tr>
+                                        <td>{{ buyer.id }}</td>
+                                        <td>{{ buyer.first_name }}</td>
+                                        <td>{{ buyer.last_name }}</td>
+                                        <td>{{ buyer.phone_number }}</td>
+                                        <td>{{ buyer.points }}</td>
+                                        <td>{{ buyer.created_at }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5">No buyers available</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 text-center">
+                    <a href="{% url 'main:create_buyer' %}" class="btn btn-primary btn-lg active">Create New Customer</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

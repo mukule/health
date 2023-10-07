@@ -3,6 +3,7 @@ from product.models import *
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .forms import *
 from django.contrib import messages
+from product.forms import *
 
 
 def index(request):
@@ -50,3 +51,28 @@ def index(request):
     }
 
     return render(request, 'main/index.html', context)
+
+def create_buyer(request):
+    if request.method == 'POST':
+        form = BuyerForm(request.POST)
+        if form.is_valid():
+            # Create a new Buyer instance and save it to the database
+            buyer = form.save()
+            return redirect('main:buyers')  # Replace 'buyer_list' with the URL name for listing buyers
+    else:
+        form = BuyerForm()
+
+    context = {
+        'form': form,
+    }
+
+    return render(request, 'main/create_buyer.html', context)
+
+def buyers(request):
+    buyers = Buyer.objects.all()
+
+    context = {
+        'buyers': buyers,
+    }
+
+    return render(request, 'main/buyers.html', context)

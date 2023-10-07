@@ -24,11 +24,14 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-md-6">
+                                <div class="col-md-4">
+                                    {{ form.category|as_crispy_field }}
+                                </div>
+                                <div class="col-md-4">
                                     {{ form.units|as_crispy_field }}
                                 </div>
-                                <div class="col-md-6">
-                                    {{ form.category|as_crispy_field }}
+                                <div class="col-md-4">
+                                    {{ form.quantity|as_crispy_field }}
                                 </div>
                             </div>
                             <div class="row">
@@ -36,9 +39,14 @@
                                     {{ form.price|as_crispy_field }}
                                 </div>
                                 <div class="col-md-4">
-                                    {{ form.quantity|as_crispy_field }}
+                                    {{ form.min_price|as_crispy_field }}
                                 </div>
                                 <div class="col-md-4">
+                                    {{ form.expiry_date|as_crispy_field }}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
                                     {{ form.image|as_crispy_field }}
                                 </div>
                             </div>

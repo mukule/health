@@ -15,5 +15,7 @@ urlpatterns = [
     path('sales/', views.sales, name='sales'),
     path('sale/<int:sale_id>/', views.sale, name='sale'),
     path('sales_h/', views.sales_h, name='sales_h'),
+    path('toggle_vat/', views.toggle_add_vat, name='toggle_vat'),
+    
 
 ]

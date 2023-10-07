@@ -70,7 +70,18 @@
                     {% endif %}
                     {% endfor %}
                 </div>
-                
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <!-- Buttons -->
+                        <div class="row">
+                            {% for method in payment_methods %}
+                            <div class="col-md-6 text-center mb-3">
+                                <a href="#" class="btn btn-primary btn-lg w-100" data-toggle="modal" data-target="#checkoutModal">{{ method.name }}</a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
                 <!-- Centered Pagination Links -->
                 <div class="col-12 text-center mt-4">
                     <ul class="pagination pagination-lg d-flex justify-content-center">
@@ -107,6 +118,8 @@
                         {% endif %}
                     </ul>
                 </div>
+               
+                
             </div>
             
 
@@ -126,8 +139,8 @@
             
                             <!-- Product Name and Quantity Column (6 cols) -->
                             <div class="col-md-8">
-                                <h5>{{ item.product.title }}</h5>
-                                <p>Products Remaining: {{ item.product.quantity }}</p>
+                                <h5 class="card-title text-center">{{ item.product.title }}</h5>
+                                <p class="text-center">Products Remaining: {{ item.product.quantity }}</p>
                             </div>
             
                             <!-- Product Price Column (2 cols) -->
@@ -151,11 +164,62 @@
                         <!-- End Iteration -->
                     </div>
                     <div class="card-footer text-center">
-                        <button type="button" class="btn btn-primary waves-effect waves-light" data-toggle="modal" data-target="#checkoutModal">
-                            Grand total (Ksh  {{ total }})
+                       
+                        <button type="button" class="btn btn-primary waves-effect waves-light">
+                            Total (Ksh  {{ total }})
                         </button>
+                        {% if carts.add_vat %}
+                        <a href="{% url 'pos:toggle_vat' %}" class="btn btn-danger waves-effect waves-light">Remove VAT ({{vat}})</a>
+                        {% else %}
+                            <a href="{% url 'pos:toggle_vat' %}" class="btn btn-danger waves-effect waves-light">VAT ({{vat}})</a>
+                        {% endif %}
+                        <button type="button" class="btn btn-primary waves-effect waves-light">
+                            Payable (Ksh  {{ carts.total_payable }})
+                        </button>
+                        
+                           
+                       
+
+
                     </div>
                 </div>
+                <div class="card">
+                    <div class="card-body">
+                        <form method="get">
+                            <div class="form-group">
+                                <input type="text" id="buyer_name" name="buyer_name" class="form-control" placeholder="Enter Buyer Name or Phone Number">
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">Search</button>
+                        </form>
+                        
+                        {% if buyers %}
+                     
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>No.</th>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Phone Number</th>
+                                    <th>Points</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for buyer in buyers %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ buyer.first_name }}</td>
+                                    <td>{{ buyer.last_name }}</td>
+                                    <td>{{ buyer.phone_number }}</td>
+                                    <td>{{ buyer.points }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% endif %}
+                    </div>
+                </div>
+                
             </div>
             
         </div>
@@ -179,7 +243,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                Are you sure you want to Complete a Sale of  <b>ksh  {{ total }}</b>
+                Are you sure you want to Complete a Sale of  <b>ksh  {{ carts.total_payable }}</b>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>

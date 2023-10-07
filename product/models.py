@@ -12,13 +12,15 @@ class Product(models.Model):
     product_code = models.CharField(max_length=50, unique=True, null=True)
     title = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    min_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     image = models.ImageField(upload_to='products/', null=True, blank=True, default='default/user.jpg')
-    category = models.ForeignKey('Category', on_delete=models.CASCADE)  # Change on_delete to CASCADE
+    category = models.ForeignKey('Category', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     quantity = models.IntegerField(default=0)
     units = models.CharField(max_length=50, null=True)
-    brand = models.CharField(max_length=50, null=True) 
+    brand = models.CharField(max_length=50, null=True)
+    expiry_date = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return self.title
@@ -40,10 +42,25 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+class Buyer(models.Model):
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
+    first_name = models.CharField(max_length=30)
+    last_name = models.CharField(max_length=30)
+    points = models.IntegerField(default=0)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"
+
+    class Meta:
+        verbose_name_plural = "Buyers"
 class Cart(models.Model):
     user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE)  # Use the custom user model
     products = models.ManyToManyField(Product, through='CartItem')
     total_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    add_vat = models.BooleanField(default=False)  # Add this field
+    total_payable = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  
+    
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -58,8 +75,12 @@ class CartItem(models.Model):
 class Sale(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     products_sold = models.ManyToManyField(Product, through='SaleItem')
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)  # Updated default value
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    vat = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    total_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
     sale_date = models.DateTimeField(default=timezone.now)
+    buyer = models.ForeignKey(Buyer, on_delete=models.SET_NULL, null=True, blank=True)  # Add buyer field
 
     def __str__(self):
         return f"Sale by {self.user.username}"
@@ -127,3 +148,20 @@ class StockTakeItem(models.Model):
     
     def __str__(self):
         return f"{self.product}"
+
+class PaymentMethod(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
+class Payment(models.Model):
+    sale = models.ForeignKey(Sale, on_delete=models.CASCADE)
+    payment_method = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE)
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Payment of {self.amount_paid} on {self.payment_date}"
+
+

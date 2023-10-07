@@ -11,6 +11,18 @@ from django.utils import timezone
 from datetime import date
 import datetime
 from django.core.serializers.json import DjangoJSONEncoder
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+import qrcode
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from django.template.loader import get_template
+from io import BytesIO
+from reportlab.lib.pagesizes import landscape
+from xhtml2pdf import pisa
+
+
+
 
 
 def period(request):
@@ -76,9 +88,9 @@ def period(request):
 
     return HttpResponse(status=200)
 
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
-@login_required
+
+@login_required  # Require authentication to access this view
 def index(request):
     # Call the period function to ensure the current year exists
     period(request)
@@ -99,21 +111,40 @@ def index(request):
     # Retrieve all categories
     categories = Category.objects.all()
 
-    user_cart = Cart.objects.filter(user=request.user).first()
+    # Initialize cart_items and total_cost to None
+    cart_items = None
+    total_cost = 0.0
 
-    if user_cart:
-        # Calculate the total cost of items in the cart
-        total_cost = user_cart.cartitem_set.aggregate(total_cost=Sum(models.F('product__price') * models.F('quantity')))['total_cost'] or 0.0
+    # Check if the user is authenticated and has a cart
+    if request.user.is_authenticated:
+        user_cart = Cart.objects.filter(user=request.user).first()
 
-        # Update the total_cost field in the Cart model
-        user_cart.total_cost = total_cost
-        user_cart.save()
+        if user_cart:
+            # Calculate the total cost of items in the cart
+            total_cost = user_cart.cartitem_set.aggregate(total_cost=Sum(models.F('product__price') * models.F('quantity')))['total_cost'] or 0.0
 
-        # Retrieve the cart items associated with the cart
-        cart_items = user_cart.cartitem_set.all()
+            # Update the total_cost field in the Cart model
+            user_cart.total_cost = total_cost
+            # user_cart.total_payable =total_cost
+            user_cart.save()
 
-    # Paginate the products with 6 products per page
-    paginator = Paginator(products, 24)
+            # Retrieve the cart items associated with the cart
+            cart_items = user_cart.cartitem_set.all()
+
+    # Retrieve all buyers and apply filtering if provided
+    buyers = Buyer.objects.all()
+    buyer_name_or_phone = request.GET.get('buyer_name')  # Get the search query
+
+    if buyer_name_or_phone:
+        # Apply filter by buyer name or phone number
+        buyers = buyers.filter(Q(first_name__icontains=buyer_name_or_phone) | Q(last_name__icontains=buyer_name_or_phone) | Q(phone_number__icontains=buyer_name_or_phone))
+
+    else:
+    # If no filter provided, set 'buyers' to an empty queryset
+        buyers = Buyer.objects.none()
+
+    # Pagination for products
+    paginator = Paginator(products, 12)  # 12 products per page
     page = request.GET.get('page')
 
     try:
@@ -124,15 +155,51 @@ def index(request):
     except EmptyPage:
         # If page is out of range (e.g., 9999), deliver last page of results
         products = paginator.page(paginator.num_pages)
+    
+    payment_methods = PaymentMethod.objects.all()
+    cart = Cart.objects.get(user=request.user)
+    vat = cart.total_payable - cart.total_cost
+
+   
+
 
     context = {
+        'carts': cart,
         'cart': cart_items,
-        'total': user_cart.total_cost,
+        'total': total_cost,
         'products': products,
         'categories': categories,
+        'buyers': buyers,
+        'payment_methods': payment_methods,
+        'vat':vat
+        
     }
 
     return render(request, 'pos/index.html', context)
+
+
+
+
+@login_required
+def toggle_add_vat(request):
+    # Get the user's cart
+    cart = Cart.objects.get(user=request.user)
+
+    # Toggle the 'add_vat' flag
+    cart.add_vat = not cart.add_vat
+
+    # Calculate total_payable based on the 'add_vat' flag with a 16% VAT rate
+    if cart.add_vat:
+        vat_rate = Decimal(0.16)  # 16% VAT
+        cart.total_payable = cart.total_cost + (cart.total_cost * vat_rate)
+    else:
+        cart.total_payable = cart.total_cost
+
+    # Save the cart
+    cart.save()
+
+    return redirect('pos:index')
+
 
 
 
@@ -207,8 +274,15 @@ def cart(request):
     
 def increment_cart_item(request, item_id):
     cart_item = get_object_or_404(CartItem, id=item_id)
-    cart_item.quantity += 1
-    cart_item.save()
+
+    # Check if incrementing the quantity exceeds the product's available quantity
+    if cart_item.quantity < cart_item.product.quantity:
+        cart_item.quantity += 1
+        cart_item.save()
+    else:
+        # If incrementing is not allowed, show an error message
+        messages.error(request, "Cannot increase quantity beyond available quantity.")
+
     return redirect('pos:index')
 
 def decrement_cart_item(request, item_id):
@@ -226,7 +300,156 @@ def remove_cart_item(request, item_id):
     cart_item.delete()
     return redirect('pos:index')
 
-@login_required
+from django.http import FileResponse
+from reportlab.pdfgen import canvas
+import io
+
+from reportlab.platypus import Table, TableStyle
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+
+from django.utils import timezone  # Import timezone
+
+# ... (previous code) ...
+
+def generate_pdf_receipt(sale):
+    # Create a file-like buffer to receive PDF data.
+    buffer = io.BytesIO()
+
+    # Define custom page width and height (adjust as needed)
+    page_width = 250  # Adjust the page width
+    page_height = 500
+
+    # Define the width of the receipt content (adjust as needed)
+    receipt_width = 200  # You can customize the width
+
+    # Calculate the x-position for centering the text
+    x_centered = (page_width - receipt_width) / 2
+
+    # Calculate the padding for both left and right sides
+    padding = 20  # Adjust the padding as needed
+
+    # Create the PDF object with custom page size (width x height)
+    p = canvas.Canvas(buffer, pagesize=(page_width, page_height))
+
+    # Set the font and font size for the title
+    p.setFont("Helvetica-Bold", 12)
+
+    # Reduce the space from which the title starts from the top
+    title_y_position = page_height - 50
+
+    # Draw the title centered with padding
+    draw_centered_text(p, "Health today", title_y_position, page_width, "Helvetica-Bold", 12)
+
+    # Set the font and font size for the shop details
+    p.setFont("Helvetica", 10)
+
+    # Define the content for shop address, sale date, PIN, and sale ID (customize as needed)
+    shop_address = "St Ellis Building, City Hall Way, Nairobi"
+    contact = "+254794085329 | info@healthtoday.co.ke "
+    sale_date = "Date: 2023-10-10"
+    shop_pin = "Shop PIN: 1234"
+    sale_id = f"CASH SALE: {sale.id}"
+
+    # Calculate the y-positions for other content
+    address_y_position = title_y_position - 20
+    contact_y_position = address_y_position - 15
+    date_y_position = contact_y_position - 15
+    pin_y_position = date_y_position - 15
+    sale_id_y_position = pin_y_position - 15
+
+    # Draw the shop details centered with padding
+    draw_centered_text(p, shop_address, address_y_position, page_width, "Helvetica", 10)
+    draw_centered_text(p, contact, contact_y_position, page_width, "Helvetica", 10)
+    draw_centered_text(p, sale_date, date_y_position, page_width, "Helvetica", 10)
+    draw_centered_text(p, shop_pin, pin_y_position, page_width, "Helvetica", 10)
+    draw_centered_text(p, sale_id, sale_id_y_position, page_width, "Helvetica", 10)
+
+    # Draw double-dotted lines below the details
+    dotted_line_y_position = sale_id_y_position - 10
+    p.setDash(3, 3)  # Set the dash pattern for the lines
+    p.line(x_centered + padding, dotted_line_y_position, x_centered + receipt_width - padding, dotted_line_y_position)
+
+    # Set the font and font size for sales details headers
+    p.setFont("Helvetica", 10)  # No longer bold
+
+    # headers
+    sales_details = [
+        ["Item", "Qty", "Price", "Total"]
+    ]
+
+    # data
+    for sale_item in SaleItem.objects.filter(sale=sale):
+        product_name = sale_item.product.title
+        quantity = sale_item.quantity_sold
+        unit_price = sale_item.unit_price
+        total_price = quantity * unit_price
+        detail = [product_name, quantity, f"{unit_price:.2f}", f"{total_price:.2f}"]
+        sales_details.append(detail)
+
+    # Calculate the y-position for sales details
+    sales_details_y_position = dotted_line_y_position - 25
+
+    # Create the table without grid lines
+    table = Table(sales_details, colWidths=[70, 30, 40, 50], rowHeights=15)
+    table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('TEXTCOLOR', (0, 0), (-1, 0), (0, 0, 0)),  # Text color for the first row (headers)
+    ]))
+
+    # Calculate the position to center the table
+    table_x_position = (page_width - receipt_width) / 2
+
+    # Calculate the total height of the table
+    table_height = len(sales_details) * 15  # Assuming row height is 15
+
+    # Adjust the position to ensure it doesn't go beyond the page
+    if sales_details_y_position - table_height < 0:
+        sales_details_y_position = table_height
+
+    # Draw the table
+    table.wrapOn(p, page_width, page_height)
+    table.drawOn(p, table_x_position, sales_details_y_position - table_height)
+
+    # Calculate positions for "Total VAT," "Total Payable," and "Total Paid"
+    total_vat_y_position = sales_details_y_position - table_height - 25
+    total_payable_y_position = total_vat_y_position - 15
+    total_paid_y_position = total_payable_y_position - 15
+
+    # Add text for "Total VAT," "Total Payable," and "Total Paid" from the Sale model
+    total_vat_text = f"Total VAT: {sale.vat:.2f}"
+    total_payable_text = f"Total Payable: {sale.total_amount:.2f}"
+    total_paid_text = f"Total Paid: {sale.total_paid:.2f}"
+
+    draw_centered_text(p, total_vat_text, total_vat_y_position, page_width, "Helvetica", 10)
+    draw_centered_text(p, total_payable_text, total_payable_y_position, page_width, "Helvetica", 10)
+    draw_centered_text(p, total_paid_text, total_paid_y_position, page_width, "Helvetica", 10)
+
+    # Draw double-dotted lines below the totals
+    p.setDash(3, 3)  # Set the dash pattern for the lines
+    p.line(x_centered + padding, total_paid_y_position - 10, x_centered + receipt_width - padding, total_paid_y_position - 10)
+
+    # Add a line for "You were served by"
+    served_by_y_position = total_paid_y_position - 20
+    draw_centered_text(p, "You were served by: John Doe", served_by_y_position, page_width, "Helvetica", 10)
+
+    # Close the PDF object cleanly, and we're done.
+    p.showPage()
+    p.save()
+
+    # FileResponse sets the Content-Disposition header so that browsers
+    # present the option to save the file.
+    buffer.seek(0)
+    return FileResponse(buffer, as_attachment=True, filename="receipt.pdf")
+
+def draw_centered_text(pdf_canvas, text, y_position, page_width, font_name, font_size):
+    # Calculate the x-position for centering the text
+    x_centered = (page_width - pdf_canvas.stringWidth(text, font_name, font_size)) / 2
+    pdf_canvas.setFont(font_name, font_size)
+    pdf_canvas.drawString(x_centered, y_position, text)
+
+
+
 def checkout(request):
     # Retrieve the user's cart
     user_cart = get_object_or_404(Cart, user=request.user)
@@ -234,8 +457,17 @@ def checkout(request):
     # Check if the cart is not empty
     if user_cart.products.exists():
         try:
-            # Create a new sale
-            sale = Sale.objects.create(user=request.user, total_amount=user_cart.total_cost)
+            # Calculate VAT based on your business logic (e.g., 16% VAT)
+            vat_rate = Decimal(0.16)  # 16% VAT
+            vat_amount = user_cart.total_cost * vat_rate
+
+            # Create a new sale and update the VAT field
+            sale = Sale.objects.create(
+                user=request.user,
+                total_amount=user_cart.total_cost,  # Excluding VAT
+                vat=vat_amount,  # Set the VAT amount
+                total_paid=user_cart.total_payable,  # Including VAT
+            )
 
             # Iterate over cart items and create sale items
             for cart_item in user_cart.cartitem_set.all():
@@ -264,34 +496,28 @@ def checkout(request):
             # Update the Day model for the current day
             sale_date = sale.sale_date.date()
             today = sale_date.strftime("%A")  # Get the current day of the week
-            print(today)
-
-            current_day = Day.objects.get(week__month__year__year=sale_date.year,
-                                          week__month__month=sale_date.month,
-                                          week__week_number=sale_date.isocalendar()[1],
-                                          day_of_week=today)
+            current_day = Day.objects.get(
+                week__month__year__year=sale_date.year,
+                week__month__month=sale_date.month,
+                week__week_number=sale_date.isocalendar()[1],
+                day_of_week=today
+            )
             current_day.sales.add(sale)
             current_day.sales_amount += sale.total_amount
             current_day.save()
 
-            # Update the Week model for the current week
-            current_week = current_day.week
-            current_week.sales_amount += sale.total_amount
-            current_week.save()
+            # Generate the PDF receipt
+            pdf_buffer = generate_pdf_receipt(sale)
 
-            # Update the Month model for the current month
-            current_month = current_week.month
-            current_month.sales_amount += sale.total_amount
-            current_month.save()
+            # Serve the PDF for download
+            response = HttpResponse(pdf_buffer, content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="receipt.pdf"'
 
-            # Update the Year model for the current year
-            current_year = current_month.year
-            current_year.sales_amount += sale.total_amount
-            current_year.save()
+            return response
 
-            messages.success(request, 'Checkout successful. Your order has been placed.')
         except Exception as e:
             messages.error(request, f'An error occurred during checkout: {str(e)}')
+            return redirect('pos:cart')
     else:
         messages.warning(request, 'Your cart is empty. Please add items to your cart before checking out.')
 
@@ -395,6 +621,8 @@ def sale(request, sale_id):
     }
 
     return render(request, 'pos/sales.html', context)
+
+
 import json
 from decimal import Decimal
 from datetime import timedelta
@@ -480,3 +708,4 @@ def sales_h(request):
     }
 
     return render(request, 'pos/sales_h.html', context)
+
