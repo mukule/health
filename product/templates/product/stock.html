@@ -8,8 +8,6 @@
             <div class="col-12">
                 <div class="page-title-box d-flex align-items-center justify-content-between">
                     <h4 class="mb-0 font-size-18">Store Stock</h4>
-
-                    
                 </div>
             </div>
         </div>  
@@ -18,7 +16,34 @@
             <div class="col-xl-12">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title mb-4"> Stock Value  ksh. {{ stock_value }}</h4>
+                        <h4 class="card-title mb-4">Stock Value ksh. {{ stock_value }}</h4>
+                        <form method="GET" action="{% url 'product:stock' %}">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="category">Category</label>
+                                        <select class="form-control" id="category" name="category">
+                                            <option value="">All</option>
+                                            <!-- Include options for categories -->
+                                            {% for category in categories %}
+                                                <option value="{{ category.name }}">{{ category.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="product_name">Product Name</label>
+                                        <input type="text" class="form-control" id="product_name" name="product_name" value="{{ request.GET.product_name }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group mt-4">
+                                        <button type="submit" class="btn btn-primary">Filter</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
                         
                         <div class="table-responsive">
                             <table class="table mb-0">
@@ -47,7 +72,21 @@
                                     {% endfor %}
                                 </tbody>
                             </table>
-                            
+                        </div>
+                        
+                        <!-- Pagination links -->
+                        <div class="mt-3">
+                            <ul class="pagination justify-content-center">
+                                {% if products.has_previous %}
+                                    <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
+                                    <li class="page-item"><a class="page-link" href="?page={{ products.previous_page_number }}">Previous</a></li>
+                                {% endif %}
+                                <li class="page-item active"><span class="page-link">{{ products.number }}</span></li>
+                                {% if products.has_next %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ products.next_page_number }}">Next</a></li>
+                                    <li class="page-item"><a class="page-link" href="?page={{ products.paginator.num_pages }}">Last</a></li>
+                                {% endif %}
+                            </ul>
                         </div>
 
                     </div>
@@ -57,14 +96,8 @@
 
             </div>
             <!-- end col -->
-
-
-           
-            <!-- end col -->
         </div>
         
     </div>
 </div>
 {% endblock content %}
-
-

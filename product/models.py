@@ -21,6 +21,7 @@ class Product(models.Model):
     units = models.CharField(max_length=50, null=True)
     brand = models.CharField(max_length=50, null=True)
     expiry_date = models.DateField(null=True, blank=True)
+    
 
     def __str__(self):
         return self.title
@@ -36,8 +37,23 @@ class Product(models.Model):
 
 
 
+
 class Category(models.Model):
     name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.name
+    
+
+class Supplier(models.Model):
+    name = models.CharField(max_length=100)
+    contact_person = models.CharField(max_length=100, blank=True, null=True)
+    email = models.EmailField(max_length=100, blank=True, null=True)
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+    products_supplied = models.ManyToManyField(Category, related_name='suppliers', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
@@ -54,12 +70,15 @@ class Buyer(models.Model):
 
     class Meta:
         verbose_name_plural = "Buyers"
+
 class Cart(models.Model):
     user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE)  # Use the custom user model
     products = models.ManyToManyField(Product, through='CartItem')
     total_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     add_vat = models.BooleanField(default=False)  # Add this field
-    total_payable = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  
+    total_payable = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    buyer = models.ForeignKey(Buyer, on_delete=models.SET_NULL, null=True, blank=True)  # Add buyer field
+    points = models.IntegerField(null=True, blank=True)  
     
 
     def __init__(self, *args, **kwargs):
@@ -127,14 +146,15 @@ class Day(models.Model):
 
     def __str__(self):
         return self.day_of_week
-
-
+    
 class StockTake(models.Model):
     stock_date = models.DateField(default=timezone.now)
     products = models.ManyToManyField(Product, through='StockTakeItem')
     stock_value = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    value = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    difference = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)  # New field for the difference
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True)
-    stock_balanced = models.BooleanField(default=False)  # Add this field
+    stock_balanced = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Stock Take on {self.stock_date} by {self.user}"

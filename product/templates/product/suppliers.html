@@ -1,0 +1,75 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-flex align-items-center justify-content-between">
+                    <h4 class="mb-0 font-size-18">Product suppliers</h4>
+                </div>
+            </div>
+        </div>  
+        
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4">Suppliers</h4>
+                        
+                        {% if suppliers %}
+                        <div class="table-responsive">
+                            <table class="table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Contact Person</th>
+                                        <th>Email</th>
+                                        <th>Phone Number</th>
+                                        <th>Address</th>
+                                        <th>Products Supplied</th>
+                                        <th>Created At</th>
+                                        <th>Last Updated</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for supplier in suppliers %}
+                                    <tr>
+                                        <td>{{ supplier.id }}</td>
+                                        <td>{{ supplier.name }}</td>
+                                        <td>{{ supplier.contact_person }}</td>
+                                        <td>{{ supplier.email }}</td>
+                                        <td>{{ supplier.phone_number }}</td>
+                                        <td>{{ supplier.address }}</td>
+                                        <td>
+                                            {% for product in supplier.products_supplied.all %}
+                                                {{ product.name }}<br>
+                                            {% endfor %}
+                                        </td>
+                                        <td>{{ supplier.created_at }}</td>
+                                        <td>{{ supplier.updated_at }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p>No suppliers available.</p>
+                        {% endif %}
+                        <div class="col-12 text-center">
+                            <a href="{% url 'product:supplier_create' %}" class="btn btn-primary">Add Supplier</a>
+                        </div>
+                    </div>
+                    <!-- end card-body-->
+                </div>
+                <!-- end card -->
+
+            </div>
+            <!-- end col -->
+        </div>
+        
+    </div>
+</div>
+{% endblock content %}

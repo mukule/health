@@ -1,0 +1,74 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-flex align-items-center justify-content-between">
+                    <h4 class="mb-0 font-size-18">Stock Movement</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4">Stock Movement</h4>
+                        <form method="GET" action="{% url 'product:stock_movement' %}">
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="start_date" class="form-label">Start Date</label>
+                                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="end_date" class="form-label">End Date</label>
+                                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="submit" class="btn btn-primary mt-4">Filter</button>
+                                </div>
+                            </div>
+                        </form>
+                        <div class="table-responsive">
+                            <table class="table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>PRODUCT</th>
+                                        <th>CATEGORY</th>
+                                        <th>PRICE</th>
+                                        <th>CREATED AT</th>
+                                        <th>LAST UPDATED</th>
+                                        <th>QUANTITY</th>
+                                        <th>QUANTITY SOLD</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for product_sale in product_sales %}
+                                    <tr>
+                                        <td>{{ product_sale.product.id }}</td>
+                                        <td>{{ product_sale.product.title }}</td>
+                                        <td>{{ product_sale.product.category }}</td>
+                                        <td>{{ product_sale.product.price }}</td>
+                                        <td>{{ product_sale.product.created_at }}</td>
+                                        <td>{{ product_sale.product.updated_at }}</td>
+                                        <td>{{ product_sale.product.quantity }}</td>
+                                        <td>{{ product_sale.total_quantity_sold }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- end card-body -->
+                </div>
+                <!-- end card -->
+            </div>
+            <!-- end col -->
+        </div>
+    </div>
+</div>
+{% endblock content %}

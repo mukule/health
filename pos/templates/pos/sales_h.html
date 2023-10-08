@@ -5,27 +5,54 @@
 <div class="page-content">
     <div class="container-fluid">
         <div class="row">
-            <div class="col-12">
-                <div class="page-title-box d-flex align-items-center justify-content-between">
-                    <h4 class="mb-0 font-size-18">Week Sales Ksh. ({{ current_week.sales_amount }})</h4>
-
-                    <div class="page-title-right">
-                        <ol class="breadcrumb m-0">
-                            <li class="breadcrumb-item"><a href="javascript: void(0);">Current Week</a></li>
-                            <li class="breadcrumb-item active">{{ current_week }}</li>
-                        </ol>
+            <div class="col-md-6 col-xl-3">
+                <div class="card border-success text-center">
+                    <div class="card-body">
+                                <h6 class="mb-0 text-center">
+                                >>
+                                </h6>
                     </div>
                 </div>
-            </div>
-        </div>  
-
+            </div> <!-- end col-->
+        
+            <div class="col-md-6 col-xl-3">
+                <div class="card border-success text-center">
+                    <div class="card-body">
+                                <h6 class="mb-0 text-center">
+                                    Total {{total}}
+                                </h6>
+                    </div>
+                </div>
+            </div> <!-- end col-->
+            <div class="col-md-6 col-xl-3">
+                <div class="card border-success text-center">
+                    <div class="card-body">
+                                <h6 class="mb-0 text-center">
+                                    VAT {{total_vat}}
+                                </h6>
+                    </div>
+                </div>
+            </div> <!-- end col-->
+        
+            <div class="col-md-6 col-xl-3">
+                <div class="card border-success text-center">
+                    <div class="card-body">
+                                <h6 class="mb-0 text-center">
+                                    NET VALUE {{total_paid}}
+                                </h6>
+                    </div>
+                </div>
+            </div> <!-- end col-->
+        </div>
+        
+        <!-- end row -->
         <div class="row">
             <div class="col-xl-12">
                 <div class="card">
                  
                     <div class="card-body">
                         
-                        <canvas id="salesBarChart" width="400" height="200"></canvas>
+                        <canvas id="categorySalesBarChart" width="400" height="200"></canvas>
                     </div>
                     <!-- end card-body-->
                 </div>
@@ -34,10 +61,33 @@
         </div>
         
         <div class="row">
-            <div class="col-xl-6">
+            <div class="col-xl-12">
                 <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title mb-4">This week's Sales</h4>
+                    <div class="card-body text-center">
+                        <h4 class="card-title mb-4">sales</h4>
+                        <form method="get" class="mb-4 mx-auto">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="start_date">Start Date</label>
+                                        <input type="date" class="form-control" id="start_date" name="start_date" value="{{ request.GET.start_date }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="end_date">End Date</label>
+                                        <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request.GET.end_date }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <button type="submit" class="btn btn-primary mt-4">Filter</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        
+                        
                         <div class="table-responsive">
                             <table class="table mb-0">
                                 <thead>
@@ -45,18 +95,22 @@
                                         <th>Sale ID</th>
                                         <th>Date</th>
                                         <th>Total Amount</th>
+                                        <th>VAT</th>
+                                        <th>Net Value</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for sale in weekly_sales %}
+                                    {% for sale in sales_page %}
                                     <tr>
                                         <th scope="row">{{ sale.id }}</th>
                                         <td>{{ sale.sale_date|date:"F j, Y" }}</td>
                                         <td>Ksh {{ sale.total_amount }}</td>
+                                        <td>Ksh {{ sale.vat }}</td>
+                                        <td>Ksh {{ sale.total_paid }}</td>
                                     </tr>
                                     {% empty %}
                                     <tr>
-                                        <td colspan="3">No sales recorded this week.</td>
+                                        <td colspan="3">No sales recorded for this period</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -85,44 +139,6 @@
 
                 </div>
                 <!-- end card -->                
-
-            </div>
-            <!-- end col -->
-
-
-            <div class="col-xl-6">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title mb-4">Best Seller Products</h4>
-                        <div class="table-responsive">
-                            <table class="table mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Product Name</th>
-                                        <th>Product Price</th>
-                                        <th>Quantities Sold</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for product in top_products %}
-                                    <tr>
-                                        <td>{{ product.product__title }}</td>
-                                        <td>{{ product.unit_price }}</td>
-                                        <td>{{ product.total_quantity }}</td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="3">No best-selling products recorded this week.</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <!-- end card-body-->
-                </div>
-                <!-- end card -->
-                
 
             </div>
         </div>

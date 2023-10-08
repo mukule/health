@@ -29,6 +29,9 @@
                                         <th>Stock taken by</th>
                                         <th>Products Counted</th>
                                         <th>Stock Balanced</th>
+                                        <th>Stock Value</th>
+                                        <th>Counted Value</th>
+                                        <th>Difference</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -40,6 +43,9 @@
                                             <td>{{ stock.user }}</td>
                                             <td>{{ stock.stocktakeitem_set.count }}</td>
                                             <td>{{ stock.stock_balanced }}</td>
+                                            <td>{{ stock.stock_value }}</td>
+                                            <td>{{ stock.value }}</td>
+                                            <td>{{ stock.difference }}</td>
                                         </tr>
                                         {% endfor %}
                                     {% else %}

@@ -12,15 +12,19 @@ from datetime import date
 import datetime
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-import qrcode
+from django.http import FileResponse
+from reportlab.pdfgen import canvas
+import io
+from eshop import settings
+from escpos.printer import Usb
+from reportlab.platypus import Table, TableStyle
 from reportlab.lib.pagesizes import letter
-from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
-from django.template.loader import get_template
-from io import BytesIO
-from reportlab.lib.pagesizes import landscape
-from xhtml2pdf import pisa
-
+from django.db.models import Sum, F
+from django.db.models import DecimalField
+from django.db.models.functions import Coalesce
+from decimal import Decimal
+from django.utils import timezone  # Import timezone
 
 
 
@@ -111,9 +115,12 @@ def index(request):
     # Retrieve all categories
     categories = Category.objects.all()
 
-    # Initialize cart_items and total_cost to None
+    # Initialize cart_items, total_cost, vat, total_payable, and points to 0
     cart_items = None
-    total_cost = 0.0
+    total_cost = 0
+    vat = 0
+    total_payable = 0
+    points = 0
 
     # Check if the user is authenticated and has a cart
     if request.user.is_authenticated:
@@ -121,11 +128,31 @@ def index(request):
 
         if user_cart:
             # Calculate the total cost of items in the cart
-            total_cost = user_cart.cartitem_set.aggregate(total_cost=Sum(models.F('product__price') * models.F('quantity')))['total_cost'] or 0.0
+            total_cost = round(user_cart.cartitem_set.aggregate(
+                total_cost=Coalesce(
+                    Sum(F('product__price') * F('quantity'), output_field=DecimalField()),
+                    Decimal('0.00')
+                )
+            )['total_cost'])
+
+            # Calculate points for each 100 shillings of total cost
+            points = total_cost // 100
 
             # Update the total_cost field in the Cart model
             user_cart.total_cost = total_cost
-            # user_cart.total_payable =total_cost
+
+            # Check if "Add VAT" is True in the cart
+            if user_cart.add_vat:
+                vat_rate = Decimal('0.16')  # 16% VAT rate
+                vat = round(total_cost * vat_rate)
+                total_payable = total_cost + vat
+            else:
+                vat = 0
+                total_payable = total_cost
+
+            user_cart.vat = vat
+            user_cart.total_payable = total_payable
+            user_cart.points = points
             user_cart.save()
 
             # Retrieve the cart items associated with the cart
@@ -134,13 +161,23 @@ def index(request):
     # Retrieve all buyers and apply filtering if provided
     buyers = Buyer.objects.all()
     buyer_name_or_phone = request.GET.get('buyer_name')  # Get the search query
+    
 
     if buyer_name_or_phone:
         # Apply filter by buyer name or phone number
-        buyers = buyers.filter(Q(first_name__icontains=buyer_name_or_phone) | Q(last_name__icontains=buyer_name_or_phone) | Q(phone_number__icontains=buyer_name_or_phone))
+        filtered_buyers = buyers.filter(Q(first_name__icontains=buyer_name_or_phone) | Q(last_name__icontains=buyer_name_or_phone) | Q(phone_number__icontains=buyer_name_or_phone))
 
+        if filtered_buyers.exists():
+            # If there are filtered buyers, update the cart's buyer
+            user_cart.buyer = filtered_buyers.first()
+            user_cart.save()
+            # Update the buyers queryset with filtered_buyers
+            buyers = filtered_buyers
+        else:
+            # If no matching buyers found, set 'buyers' to an empty queryset
+            buyers = Buyer.objects.none()
     else:
-    # If no filter provided, set 'buyers' to an empty queryset
+        # If no filter provided, set 'buyers' to all buyers
         buyers = Buyer.objects.none()
 
     # Pagination for products
@@ -155,14 +192,12 @@ def index(request):
     except EmptyPage:
         # If page is out of range (e.g., 9999), deliver last page of results
         products = paginator.page(paginator.num_pages)
-    
+
     payment_methods = PaymentMethod.objects.all()
     cart = Cart.objects.get(user=request.user)
-    vat = cart.total_payable - cart.total_cost
 
-   
-
-
+    print(buyers)
+    print(points)
     context = {
         'carts': cart,
         'cart': cart_items,
@@ -171,8 +206,8 @@ def index(request):
         'categories': categories,
         'buyers': buyers,
         'payment_methods': payment_methods,
-        'vat':vat
-        
+        'vat': vat,
+        'total_payable': total_payable,
     }
 
     return render(request, 'pos/index.html', context)
@@ -300,19 +335,11 @@ def remove_cart_item(request, item_id):
     cart_item.delete()
     return redirect('pos:index')
 
-from django.http import FileResponse
-from reportlab.pdfgen import canvas
-import io
 
-from reportlab.platypus import Table, TableStyle
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 
-from django.utils import timezone  # Import timezone
 
-# ... (previous code) ...
 
-def generate_pdf_receipt(sale):
+def generate_pdf_receipt(sale, served_by_username):
     # Create a file-like buffer to receive PDF data.
     buffer = io.BytesIO()
 
@@ -417,8 +444,8 @@ def generate_pdf_receipt(sale):
     total_paid_y_position = total_payable_y_position - 15
 
     # Add text for "Total VAT," "Total Payable," and "Total Paid" from the Sale model
-    total_vat_text = f"Total VAT: {sale.vat:.2f}"
-    total_payable_text = f"Total Payable: {sale.total_amount:.2f}"
+    total_vat_text = f"VAT: {sale.vat:.2f}"
+    total_payable_text = f"Total: {sale.total_amount:.2f}"
     total_paid_text = f"Total Paid: {sale.total_paid:.2f}"
 
     draw_centered_text(p, total_vat_text, total_vat_y_position, page_width, "Helvetica", 10)
@@ -431,7 +458,8 @@ def generate_pdf_receipt(sale):
 
     # Add a line for "You were served by"
     served_by_y_position = total_paid_y_position - 20
-    draw_centered_text(p, "You were served by: John Doe", served_by_y_position, page_width, "Helvetica", 10)
+    draw_centered_text(p, f"You were served by: {served_by_username}", served_by_y_position, page_width, "Helvetica", 10)
+
 
     # Close the PDF object cleanly, and we're done.
     p.showPage()
@@ -448,9 +476,13 @@ def draw_centered_text(pdf_canvas, text, y_position, page_width, font_name, font
     pdf_canvas.setFont(font_name, font_size)
     pdf_canvas.drawString(x_centered, y_position, text)
 
+from django.db import transaction
 
-
+@transaction.atomic
 def checkout(request):
+    # Initialize pdf_data variable outside the try block
+    pdf_data = None
+
     # Retrieve the user's cart
     user_cart = get_object_or_404(Cart, user=request.user)
 
@@ -458,8 +490,12 @@ def checkout(request):
     if user_cart.products.exists():
         try:
             # Calculate VAT based on your business logic (e.g., 16% VAT)
-            vat_rate = Decimal(0.16)  # 16% VAT
-            vat_amount = user_cart.total_cost * vat_rate
+            if user_cart.add_vat:  # Check if VAT should be added
+                # Calculate VAT based on your business logic (e.g., 16% VAT)
+                vat_rate = Decimal(0.16)  # 16% VAT
+                vat_amount = user_cart.total_cost * vat_rate
+            else:
+                vat_amount = Decimal(0.0)  # No VAT
 
             # Create a new sale and update the VAT field
             sale = Sale.objects.create(
@@ -467,7 +503,14 @@ def checkout(request):
                 total_amount=user_cart.total_cost,  # Excluding VAT
                 vat=vat_amount,  # Set the VAT amount
                 total_paid=user_cart.total_payable,  # Including VAT
+                buyer=user_cart.buyer  # Associate the sale with the buyer from the cart
             )
+
+            # Update buyer's points (assuming each 100 shillings gives 1 point)
+            buyer = user_cart.buyer
+            if buyer:
+                buyer.points += user_cart.points
+                buyer.save()
 
             # Iterate over cart items and create sale items
             for cart_item in user_cart.cartitem_set.all():
@@ -507,21 +550,27 @@ def checkout(request):
             current_day.save()
 
             # Generate the PDF receipt
-            pdf_buffer = generate_pdf_receipt(sale)
+            pdf_data = generate_pdf_receipt(sale, request.user.username)
 
-            # Serve the PDF for download
-            response = HttpResponse(pdf_buffer, content_type='application/pdf')
-            response['Content-Disposition'] = f'attachment; filename="receipt.pdf"'
-
-            return response
+            # Attempt to print the receipt to the POS printer (assumes the POS printer is the default printer)
+            try:
+                printer = Usb(0x0456, 0x0808, 0)  # Replace with the correct USB Vendor ID and Product ID for your printer
+                printer.set(align='center')
+                printer.text(pdf_data.getvalue())  # Use .getvalue() to get the content
+                printer.cut()
+                printer.close()
+            except Exception as printer_error:
+                # If printing fails, raise a message
+                messages.warning(request, f'Error while printing receipt: {str(printer_error)}')
 
         except Exception as e:
             messages.error(request, f'An error occurred during checkout: {str(e)}')
-            return redirect('pos:cart')
     else:
         messages.warning(request, 'Your cart is empty. Please add items to your cart before checking out.')
 
     return redirect('pos:cart')
+
+
 
 def sales(request):
     # Get the current datetime with timezone information
@@ -557,6 +606,7 @@ def sales(request):
 
     # Convert the data to JSON format for use in JavaScript
     sales_data_json = json.dumps({'sale_ids': sale_ids, 'total_amounts': total_amounts})
+    print(sales_data_json)
 
     context = {
         'sales': page,
@@ -639,73 +689,77 @@ class DecimalEncoder(DjangoJSONEncoder):
         if isinstance(obj, Decimal):
             return str(obj)
         return super(DecimalEncoder, self).default(obj)
-    
+  
+from datetime import datetime, timedelta  # Import datetime from Python's datetime module
+
+from django.db.models import *
 
 
 def sales_h(request):
-    # Get the current date
-    current_date = datetime.datetime.now()
+    # Retrieve all sales data (unfiltered)
+    sales_data = Sale.objects.all().order_by('-sale_date')
 
-    # Calculate the week number for the current date
-    current_week_number = current_date.strftime("%U")
+    # Filter sales by date range if provided in GET parameters
+    start_date_param = request.GET.get('start_date')
+    end_date_param = request.GET.get('end_date')
 
-    try:
-        # Retrieve the current week object from the Week model
-        current_week = Week.objects.get(
-            month__year__year=current_date.year,
-            month__month=current_date.month,
-            week_number=current_week_number
-        )
-        
-        # Retrieve the days of the current week related to the current_week object
-        days_of_week = Day.objects.filter(week=current_week)
-        
-        # Retrieve all sales data for the current week
-        sales_for_current_week = Sale.objects.filter(
-            sale_date__gte=days_of_week[0].date,  # Start date of the week
-            sale_date__lte=days_of_week[6].date   # End date of the week
-        )
-    except (Week.DoesNotExist, Day.DoesNotExist):
-        # Handle the case where the Week or Day object does not exist for the current week
-        current_week = None
-        days_of_week = None
-        sales_for_current_week = None
+    if start_date_param and end_date_param:
+        try:
+            # Convert start_date and end_date to datetime objects with time components
+            start_date = datetime.strptime(start_date_param, '%Y-%m-%d')
+            end_date = datetime.strptime(end_date_param + ' 23:59:59', '%Y-%m-%d %H:%M:%S')
 
-    # Initialize a list to store sales data for each day
-    sales_data = []
+            # Convert the start and end dates to the timezone used in the Sale model
+            start_date = timezone.make_aware(start_date, timezone.get_current_timezone())
+            end_date = timezone.make_aware(end_date, timezone.get_current_timezone())
 
-    # Calculate the total sales amount for each day of the week
-    if days_of_week:
-        for day in days_of_week:
-            sales_data.append({
-                'day_of_week': day.day_of_week,
-                'sales_amount': day.sales_amount,
-            })
+            # Filter sales within the specified date range
+            sales_data = sales_data.filter(sale_date__range=(start_date, end_date))
+        except ValueError:
+            # Handle invalid date format
+            messages.warning(request, 'Invalid date format. Please use YYYY-MM-DD format.')
 
-    # Convert sales_data list to JSON using the custom DecimalEncoder
-    sales_data_json = json.dumps(sales_data, cls=DecimalEncoder)
-    print(sales_data_json)
+    # Calculate the total amounts
+    total_sales_amount = sales_data.aggregate(total_sales=Sum('total_amount'))['total_sales'] or Decimal('0.0')
+    total_vat_amount = sales_data.aggregate(total_vat=Sum('vat'))['total_vat'] or Decimal('0.0')
+    total_paid_amount = sales_data.aggregate(total_paid=Sum('total_paid'))['total_paid'] or Decimal('0.0')
 
-    today = timezone.now()
-    start_of_week = today - timedelta(days=today.weekday())
-    end_of_week = start_of_week + timedelta(days=6)
+    # Get sold items for each sale
+    sold_items = SaleItem.objects.filter(sale__in=sales_data)
 
+    # Aggregate total quantity sold for each product
+    product_sales = sold_items.values('product__title', 'product__category__name').annotate(
+        total_quantity_sold=Sum('quantity_sold')
+    )
 
-    top_products = SaleItem.objects.filter(
-        sale__sale_date__gte=start_of_week,
-        sale__sale_date__lte=end_of_week
-    ).values('product__title', 'unit_price').annotate(
-        total_quantity=Sum('quantity_sold')
-    ).order_by('-total_quantity')[:5]  # Get the top 5 products
+    # Calculate total sales amount for each category
+    category_sales = sold_items.values('product__category__name').annotate(
+        total_category_sales=Sum(F('quantity_sold') * F('unit_price'), output_field=DecimalField())
+    )
 
-    # You can pass the current_week, days_of_week, and sales_for_current_week to your template for rendering
+    # Prepare chart data
+    chart_data = []
+    for category in category_sales:
+        chart_data.append({
+            'category': category['product__category__name'],
+            'total_sales': category['total_category_sales'],
+        })
+
+    # Convert chart data to JSON
+    chart_data_json = json.dumps(chart_data, cls=DecimalEncoder)
+    print(chart_data_json)
+
+   
+
     context = {
-        'current_week': current_week,
-        'days_of_week': days_of_week,
-        'sales_data': sales_data_json,  # Include JSON-encoded sales data for the bar graph
-        'weekly_sales': sales_for_current_week,  # Include all sales for the current week
-        'top_products': top_products,
+        'sales_page': sales_data,          # Include paginated sales data
+        'total': total_sales_amount,
+        'total_vat': total_vat_amount,
+        'total_paid': total_paid_amount,
+        'product_sales': product_sales,
+        'chart_data': chart_data_json,
     }
 
     return render(request, 'pos/sales_h.html', context)
+
 

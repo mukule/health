@@ -85,3 +85,56 @@ class BuyerForm(forms.ModelForm):
             'first_name': 'First Name',
             'last_name': 'Last Name',
         }
+
+from django import forms
+from .models import Supplier
+
+class SupplierForm(forms.ModelForm):
+    name = forms.CharField(
+        max_length=100,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter name'}),
+        label='Name'
+    )
+
+    contact_person = forms.CharField(
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter contact person'}),
+        label='Contact Person'
+    )
+
+    email = forms.EmailField(
+        max_length=100,
+        required=False,
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Enter email'}),
+        label='Email'
+    )
+
+    phone_number = forms.CharField(
+        max_length=20,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter phone number'}),
+        label='Phone Number'
+    )
+
+    address = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Enter address'}),
+        label='Address'
+    )
+
+    products_supplied = forms.ModelMultipleChoiceField(
+        queryset=Category.objects.all(),
+        widget=forms.SelectMultiple(attrs={'class': 'form-control'}),
+        label='Products Supplied'
+    )
+
+    class Meta:
+        model = Supplier
+        fields = ['name', 'contact_person', 'email', 'phone_number', 'address', 'products_supplied']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Make the email and phone_number fields not required
+        self.fields['email'].required = False
+        self.fields['phone_number'].required = False

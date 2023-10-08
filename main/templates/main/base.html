@@ -61,18 +61,30 @@
 
 <script>
     // Parse the JSON data passed from Django view
-    var salesData = JSON.parse('{{ sales_data_json|escapejs }}');
+    var chartData = JSON.parse('{{ chart_data }}');
 
-    var ctx = document.getElementById('salesBarChart').getContext('2d');
-    var salesBarChart = new Chart(ctx, {
+    // Extract category names and total sales amounts from the JSON data
+    var categories = chartData.map(function(item) {
+        return item.category;
+    });
+
+    var salesAmounts = chartData.map(function(item) {
+        return parseFloat(item.total_sales);
+    });
+
+    // Define an array of colors for each category
+    var barColors = ['#f5772b', '#2bf577', '#f52b77', '#77f52b', '#2b77f5', '#f5772b', '#777777'];
+
+    var ctx = document.getElementById('categorySalesBarChart').getContext('2d');
+    var categorySalesBarChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: salesData.sale_ids,
+            labels: categories,         // Use extracted category names
             datasets: [{
-                label: 'Total Amount',
-                data: salesData.total_amounts,
-                backgroundColor: '#f5772b', // Change the bar color to #f5772b
-                borderColor: '#f5772b',     // Change the border color to #f5772b
+                label: 'Total Sales Amount',
+                data: salesAmounts,      // Use extracted sales amounts
+                backgroundColor: barColors,
+                borderColor: barColors,
                 borderWidth: 1
             }]
         },
@@ -80,18 +92,18 @@
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-                x: { // x-axis options
+                x: {
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Sales' // Label for the x-axis
+                        text: 'Category'   // Label for the x-axis (Category)
                     }
                 },
-                y: { // y-axis options
+                y: {
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Total Amount (Ksh)'
+                        text: 'Total Sales Amount (Ksh)'   // Label for the y-axis (Total Sales Amount)
                     }
                 }
             },
@@ -100,7 +112,7 @@
             },
             title: {
                 display: true,
-                text: 'Total Sales Amounts for the Current Date',
+                text: 'Total Sales Amount for Each Category',
                 position: 'top',
                 fontSize: 16,
             },
@@ -117,6 +129,79 @@
         }
     });
 </script>
+
+
+<script>
+    // Parse the JSON data passed from Django view
+    var chartData = JSON.parse('{{ chart_data|escapejs }}');
+
+    // Extract category names and total sales amounts from the JSON data
+    var categories = chartData.map(function(item) {
+        return item.category;
+    });
+
+    var salesAmounts = chartData.map(function(item) {
+        return parseFloat(item.total_sales);
+    });
+
+    // Define an array of colors for each category
+    var barColors = ['#f5772b', '#2bf577', '#f52b77', '#77f52b', '#2b77f5', '#f5772b', '#777777'];
+
+    var ctx = document.getElementById('categorySalesBarChart').getContext('2d');
+    var categorySalesBarChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: categories,         // Use extracted category names
+            datasets: [{
+                label: 'Total Sales Amount',
+                data: salesAmounts,      // Use extracted sales amounts
+                backgroundColor: barColors,
+                borderColor: barColors,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Category'   // Label for the x-axis (Category)
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Total Sales Amount (Ksh)'   // Label for the y-axis (Total Sales Amount)
+                    }
+                }
+            },
+            legend: {
+                display: false,
+            },
+            title: {
+                display: true,
+                text: 'Total Sales Amount for Each Category',
+                position: 'top',
+                fontSize: 16,
+            },
+            plugins: {
+                datalabels: {
+                    formatter: (value, context) => {
+                        return 'Ksh ' + value.toFixed(2);
+                    },
+                    color: '#000',
+                    anchor: 'end',
+                    align: 'end',
+                },
+            },
+        }
+    });
+</script>
+
 
 <script>
     // Parse the JSON data passed from Django view
@@ -198,6 +283,60 @@
         });
     });
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Include Chart.js library -->
+
+<script>
+    // Parse the JSON data passed from Django view
+    var salesData = JSON.parse('{{ sales_data_json|escapejs }}');
+
+    // Extract sale IDs and total amounts from the JSON data
+    var saleIds = salesData.sale_ids;
+    var totalAmounts = salesData.total_amounts;
+
+    // Create an array of labels for the x-axis (sales records)
+    var labels = saleIds.map(function(saleId) {
+        return 'Sale ' + saleId;
+    });
+
+    // Create a bar chart
+    var ctx = document.getElementById('salesBarChart').getContext('2d');
+    var salesBarChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,  // Use extracted labels
+            datasets: [{
+                label: 'Total Amount',
+                data: totalAmounts,  // Use extracted total amounts
+                backgroundColor: 'rgba(75, 192, 192, 0.7)',  // Bar color
+                borderColor: 'rgba(75, 192, 192, 1)',  // Border color
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Sales Record'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Total Amount (Ksh)'
+                    }
+                }
+            }
+        }
+    });
+</script>
+
+
 
 </body>
 </html>
