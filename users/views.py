@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import get_user_model, login
 from .forms import *
 from django.contrib import messages
@@ -20,12 +20,14 @@ from django.db.models.query_utils import Q
 from django.contrib.auth.decorators import user_passes_test
 import random
 import string
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import login_required
 
 
 
 
-def is_system_admin(user):
-    return user.is_superuser or (user.access_level == 'system admin')
+def is_admin_or_superuser(user):
+    return user.is_superuser or (user.access_level == 1)
 
 def not_authorized(request):
     return render(
@@ -34,17 +36,16 @@ def not_authorized(request):
     )
 
 
-# Create your views here.
-@user_not_authenticated
+@login_required
+@user_passes_test(is_admin_or_superuser, login_url='users:not_authorized')
 def register(request):
     if request.method == "POST":
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
-            user = form.save(commit=False)
-            user.is_active = False
+            user = form.save(commit=True)
+            user.is_active = True
             user.save()
-            activateEmail(request, user, form.cleaned_data.get('email'))
-            return redirect('/')
+            return redirect('users:staffs')
 
         else:
             for error in list(form.errors.values()):
@@ -57,7 +58,7 @@ def register(request):
         request=request,
         template_name="users/register.html",
         context={"form": form}
-        )
+    )
 
 def activateEmail(request, user, to_email):
     mail_subject = 'Activate your user account.'
@@ -99,30 +100,6 @@ def generate_random_password(length=10):
     password = ''.join(random.choice(characters) for _ in range(length))
     return password
 
-@user_passes_test(is_system_admin, login_url='users:not_authorized')
-def hrs(request):
-    if request.method == "POST":
-        form = PortalManagementForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=True)
-            access_level_display = user.get_access_level_display()
-            success_message = f'{access_level_display} user created successfully.'
-            messages.success(request, success_message)
-            return redirect('/')
-        else:
-            for error in list(form.errors.values()):
-                messages.error(request, error)
-    else:
-        initial_password = generate_random_password()  # Generate the initial password
-        form = PortalManagementForm(initial={'password1': initial_password, 'password2': initial_password})
-
-        print(initial_password)
-
-    return render(
-        request=request,
-        template_name="admin/hrs.html",
-        context={"form": form, "initial_password": initial_password}
-    )
 
 @user_not_authenticated
 def custom_login(request):
@@ -265,3 +242,21 @@ def custom_logout(request):
     logout(request)
     messages.info(request, "Logged out successfully!")
     return redirect("/")
+
+
+
+@login_required
+@user_passes_test(is_admin_or_superuser, login_url='users:not_authorized')
+def staffs(request):
+    staffs = CustomUser.objects.all()
+    return render(request, 'users/staffs.html', {'staffs': staffs})
+
+
+
+@login_required
+@user_passes_test(is_admin_or_superuser, login_url='users:not_authorized')
+def delete_user(request, user_id):
+    user = get_object_or_404(CustomUser, id=user_id)
+    
+    user.delete()
+    return redirect('users:staffs')  # Redirect to a relevant page after deletion.

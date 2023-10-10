@@ -5,7 +5,27 @@ from django.contrib import messages
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import *
 from users.models import *
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import login_required
 
+
+
+def is_admin_or_superuser(user):
+    return user.is_superuser or (user.access_level == 1)
+
+def is_superuser_admin_manager(user):
+    return user.is_superuser or (user.access_level in [1, 2])
+
+def is_superuser_admin_cashier(user):
+    return user.is_superuser or (user.access_level in [1, 3])
+
+
+
+def is_superuser_or_access_level_123(user):
+    return user.is_superuser or (user.access_level in [1, 2, 3])
+
+@login_required
+@user_passes_test(is_superuser_or_access_level_123, login_url='users:not_authorized')
 def create_category(request):
     if request.method == 'POST':
         form = CategoryForm(request.POST)
@@ -18,6 +38,9 @@ def create_category(request):
     
     return render(request, 'product/create_category.html', {'form': form})
 
+
+@login_required
+@user_passes_test(is_superuser_or_access_level_123, login_url='users:not_authorized')
 def edit_category(request, category_id):
     category = get_object_or_404(Category, pk=category_id)
 
@@ -32,6 +55,9 @@ def edit_category(request, category_id):
     
     return render(request, 'product/edit_category.html', {'form': form, 'category': category})
 
+
+@login_required
+@user_passes_test(is_superuser_or_access_level_123, login_url='users:not_authorized')
 def delete_category(request, category_id):
     category = get_object_or_404(Category, pk=category_id)
 
@@ -40,7 +66,9 @@ def delete_category(request, category_id):
     messages.success(request, 'Product Category deleted successfully.')
     return redirect('product:products')  # Redirect to the category list view
     
-    
+
+@login_required
+@user_passes_test(is_superuser_or_access_level_123, login_url='users:not_authorized')
 def create_product(request):
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES)
@@ -55,6 +83,9 @@ def create_product(request):
     
     return render(request, 'product/create_product.html', {'form': form})
 
+
+@login_required
+@user_passes_test(is_superuser_or_access_level_123, login_url='users:not_authorized')
 def edit_product(request, product_id):
     product = get_object_or_404(Product, id=product_id)
 
@@ -72,6 +103,9 @@ def edit_product(request, product_id):
     return render(request, 'product/edit_product.html', {'form': form, 'product': product})
 
 
+
+@login_required
+@user_passes_test(is_superuser_or_access_level_123, login_url='users:not_authorized')
 def delete_product(request, product_id):
     product = get_object_or_404(Product, id=product_id)
 
@@ -81,6 +115,9 @@ def delete_product(request, product_id):
     return redirect('product:products')  # Redirect to the product list view
   
 
+
+@login_required
+@user_passes_test(is_superuser_or_access_level_123, login_url='users:not_authorized')
 def products(request):
     categories = Category.objects.all()  # Query all categories from the database
     selected_category = None
@@ -116,6 +153,8 @@ def products(request):
 
 
 
+@login_required
+@user_passes_test(is_superuser_admin_manager, login_url='users:not_authorized')
 def stock(request):
     # Retrieve all products
     all_products = Product.objects.all()
@@ -157,17 +196,24 @@ def stock(request):
 
 
 
+@login_required
+@user_passes_test(is_superuser_or_access_level_123, login_url='users:not_authorized')
 def low_stock(request):
     low_stock_products = Product.objects.filter(quantity__lte=5)
     low_stock_count = low_stock_products.count()  # Count the low stock products
     return render(request, 'product/low_stock.html', {'products': low_stock_products, 'products_count': low_stock_count})
 
+
+@login_required
+@user_passes_test(is_superuser_or_access_level_123, login_url='users:not_authorized')
 def out_of_stock(request):
     out_of_stock_products = Product.objects.filter(quantity=0)
     out_of_stock_count = out_of_stock_products.count()  # Count the out of stock products
     return render(request, 'product/out_of_stock.html', {'products': out_of_stock_products, 'products_count': out_of_stock_count})
 
 
+@login_required
+@user_passes_test(is_superuser_admin_manager, login_url='users:not_authorized')
 def create_stock_take(request):
     # Check for permissions or authentication if necessary
 
@@ -194,6 +240,9 @@ def create_stock_take(request):
     print(total_stock_value)
     return redirect('product:stocks')
 
+
+@login_required
+@user_passes_test(is_superuser_admin_manager, login_url='users:not_authorized')
 def stocks(request):
     # Retrieve all stock takes from the database
     stock_takes = StockTake.objects.all()
@@ -201,6 +250,9 @@ def stocks(request):
     # Pass the stock takes to the template for rendering
     return render(request, 'product/stocks.html', {'stocks': stock_takes})
 
+
+@login_required
+@user_passes_test(is_superuser_admin_manager, login_url='users:not_authorized')
 def stock_detail(request, stock_take_id):
     # Retrieve the specific stock take based on the stock_take_id or show a 404 page if not found
     stock_take = get_object_or_404(StockTake, pk=stock_take_id)
@@ -214,6 +266,9 @@ def stock_detail(request, stock_take_id):
         'stock_products': products_in_stock_take,
     })
 
+
+@login_required
+@user_passes_test(is_superuser_admin_manager, login_url='users:not_authorized')
 def update_stock_take(request, stock_take_id):
     stock_take = get_object_or_404(StockTake, pk=stock_take_id)
     
@@ -230,6 +285,9 @@ def update_stock_take(request, stock_take_id):
     return render(request, 'your_template.html', {'form': form, 'stock_take': stock_take})
 
 
+
+@login_required
+@user_passes_test(is_superuser_admin_manager, login_url='users:not_authorized')
 def update_stock_take_item(request, stock_take_id, stock_take_item_id):
     # Retrieve the specific StockTake and StockTakeItem instances
     stock_take = get_object_or_404(StockTake, pk=stock_take_id)
@@ -286,6 +344,9 @@ from .models import Product, SaleItem
 
 from django.db.models import F
 
+
+@login_required
+@user_passes_test(is_superuser_admin_manager, login_url='users:not_authorized')
 def stock_movement(request):
     # Retrieve all products
     all_products = Product.objects.all()
@@ -335,11 +396,17 @@ def stock_movement(request):
 
     return render(request, 'product/stock_movement.html', context)
 
+
+@login_required
+@user_passes_test(is_superuser_admin_cashier, login_url='users:not_authorized')
 def suppliers(request):
     suppliers = Supplier.objects.all()
     context = {'suppliers': suppliers}
     return render(request, 'product/suppliers.html', context)
 
+
+@login_required
+@user_passes_test(is_superuser_admin_cashier, login_url='users:not_authorized')
 def supplier_create(request):
     if request.method == 'POST':
         form = SupplierForm(request.POST)

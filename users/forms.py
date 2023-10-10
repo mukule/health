@@ -8,15 +8,22 @@ from .models import *
 
 class UserRegistrationForm(UserCreationForm):
     email = forms.EmailField(help_text='A valid email address, please.', required=True)
+    
+    ACCESS_LEVEL_CHOICES = CustomUser.ACCESS_LEVEL_CHOICES
 
+    access_level = forms.ChoiceField(
+        choices=ACCESS_LEVEL_CHOICES,
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+    )
 
     class Meta:
-        model = get_user_model()
-        fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2']
+        model = CustomUser
+        fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2', 'access_level']
 
     def __init__(self, *args, **kwargs):
         super(UserRegistrationForm, self).__init__(*args, **kwargs)
-        
+
         # Add CSS classes to form fields
         self.fields['username'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Username'})
         self.fields['first_name'].widget.attrs.update({'class': 'form-control', 'placeholder': 'First Name'})
@@ -24,14 +31,16 @@ class UserRegistrationForm(UserCreationForm):
         self.fields['email'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Email Address'})
         self.fields['password1'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Password'})
         self.fields['password2'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Confirm Password'})
+        self.fields['access_level'].widget.attrs.update({'class': 'form-control'})
 
     def save(self, commit=True):
         user = super(UserRegistrationForm, self).save(commit=False)
         user.email = self.cleaned_data['email']
+        user.access_level = self.cleaned_data['access_level']
+
         if commit:
             user.save()
         return user
-    
 
 class PortalManagementForm(UserCreationForm):
     email = forms.EmailField(help_text='A valid email address, please.', required=True)

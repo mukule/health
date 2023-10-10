@@ -4,6 +4,12 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .forms import *
 from django.contrib import messages
 from product.forms import *
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import login_required
+
+
+def is_superuser_admin_cashier(user):
+    return user.is_superuser or (user.access_level in [1, 3])
 
 
 def index(request):
@@ -52,6 +58,9 @@ def index(request):
 
     return render(request, 'main/index.html', context)
 
+
+@login_required
+@user_passes_test(is_superuser_admin_cashier, login_url='users:not_authorized')
 def create_buyer(request):
     if request.method == 'POST':
         form = BuyerForm(request.POST)
@@ -68,6 +77,9 @@ def create_buyer(request):
 
     return render(request, 'main/create_buyer.html', context)
 
+
+@login_required
+@user_passes_test(is_superuser_admin_cashier, login_url='users:not_authorized')
 def buyers(request):
     buyers = Buyer.objects.all()
 
