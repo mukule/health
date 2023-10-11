@@ -15,7 +15,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import FileResponse
 from reportlab.pdfgen import canvas
 import io
-from eshop import settings
+import usb.core
 from escpos.printer import Usb
 from reportlab.platypus import Table, TableStyle
 from reportlab.lib.pagesizes import letter
@@ -25,8 +25,10 @@ from django.db.models import DecimalField
 from django.db.models.functions import Coalesce
 from decimal import Decimal
 from django.utils import timezone  # Import timezone
+from django.core.files.storage import FileSystemStorage
+from django.conf import settings
 
-
+receipts_storage = FileSystemStorage(location=settings.MEDIA_ROOT)
 
 
 def period(request):
@@ -194,12 +196,10 @@ def index(request):
         products = paginator.page(paginator.num_pages)
 
     payment_methods = PaymentMethod.objects.all()
-    cart = Cart.objects.get(user=request.user)
 
-    print(buyers)
-    print(points)
+    
     context = {
-        'carts': cart,
+        'carts': user_cart,
         'cart': cart_items,
         'total': total_cost,
         'products': products,
@@ -480,18 +480,14 @@ from django.db import transaction
 
 @transaction.atomic
 def checkout(request):
-    # Initialize pdf_data variable outside the try block
-    pdf_data = None
+    try:
+        # Retrieve the user's cart
+        user_cart = get_object_or_404(Cart, user=request.user)
 
-    # Retrieve the user's cart
-    user_cart = get_object_or_404(Cart, user=request.user)
-
-    # Check if the cart is not empty
-    if user_cart.products.exists():
-        try:
+        # Check if the cart is not empty
+        if user_cart.products.exists():
             # Calculate VAT based on your business logic (e.g., 16% VAT)
-            if user_cart.add_vat:  # Check if VAT should be added
-                # Calculate VAT based on your business logic (e.g., 16% VAT)
+            if user_cart.add_vat:
                 vat_rate = Decimal(0.16)  # 16% VAT
                 vat_amount = user_cart.total_cost * vat_rate
             else:
@@ -552,23 +548,40 @@ def checkout(request):
             # Generate the PDF receipt
             pdf_data = generate_pdf_receipt(sale, request.user.username)
 
+
             # Attempt to print the receipt to the POS printer (assumes the POS printer is the default printer)
-            try:
-                printer = Usb(0x0456, 0x0808, 0)  # Replace with the correct USB Vendor ID and Product ID for your printer
+        try:
+            # Find the first USB printer
+            printer = None
+
+            for device in usb.core.find(find_all=True):
+                if "printer" in device.product.lower():
+                    printer = device
+                    break
+
+            if printer is not None:
+                printer.open()
                 printer.set(align='center')
-                printer.text(pdf_data.getvalue())  # Use .getvalue() to get the content
+                printer.text(pdf_data.getvalue())
                 printer.cut()
                 printer.close()
-            except Exception as printer_error:
-                # If printing fails, raise a message
-                messages.warning(request, f'Error while printing receipt: {str(printer_error)}')
+            else:
+                messages.warning(request, 'No USB printer found.')
 
-        except Exception as e:
-            messages.error(request, f'An error occurred during checkout: {str(e)}')
-    else:
-        messages.warning(request, 'Your cart is empty. Please add items to your cart before checking out.')
+        except usb.core.USBError as usb_error:
+            messages.warning(request, f'USB error while printing receipt: {str(usb_error)}')
+        except Exception as printer_error:
+            messages.warning(request, f'Problem locating your printer, Please check on your printer')
+
+
+        else:
+            messages.warning(request, 'Your cart is empty. Please add items to your cart before checking out.')
+
+    except Exception as e:
+        messages.error(request, f'An error occurred during checkout: {str(e)}')
 
     return redirect('pos:cart')
+
 
 
 
