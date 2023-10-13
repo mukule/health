@@ -161,7 +161,10 @@
                             </div>
                         </div>
                         {% endfor %}
-                        <!-- End Iteration -->
+                        
+                       
+                        
+                        
                     </div>
                     <div class="card-footer text-center">
                        
@@ -176,6 +179,26 @@
                         <button type="button" class="btn btn-primary waves-effect waves-light">
                             Payable (Ksh  {{ carts.total_payable }})
                         </button>
+
+                       <br><br/>
+                       <form method="post" action="{% url 'pos:update_discount' %}">
+                        {% csrf_token %}
+                        
+                        <div class="row text-center mb-3">
+                            <div class="col-md-12">
+                                <label for="discount">Discount Amount:</label>
+                                <input type="number" name="new_discount" id="discount" class="form-control" value="{{ carts.discount}}">
+                            </div>
+                        </div>
+                        
+                        <div class="row text-center mb-3">
+                            <div class="col-md-12">
+                                <button type="submit" class="btn btn-primary">Update Discount</button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                     
                         
                            
                        

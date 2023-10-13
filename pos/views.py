@@ -144,14 +144,20 @@ def index(request):
             # Update the total_cost field in the Cart model
             user_cart.total_cost = total_cost
 
+            # Calculate the discount from the user's cart
+            discount = user_cart.discount
+
+            # Apply the discount to the total cost
+            total_cost_after_discount = max(0, total_cost - discount)
+
             # Check if "Add VAT" is True in the cart
             if user_cart.add_vat:
                 vat_rate = Decimal('0.16')  # 16% VAT rate
-                vat = round(total_cost * vat_rate)
-                total_payable = total_cost + vat
+                vat = round(total_cost_after_discount * vat_rate)
+                total_payable = total_cost_after_discount + vat
             else:
                 vat = 0
-                total_payable = total_cost
+                total_payable = total_cost_after_discount
 
             user_cart.vat = vat
             user_cart.total_payable = total_payable
@@ -164,7 +170,6 @@ def index(request):
     # Retrieve all buyers and apply filtering if provided
     buyers = Buyer.objects.all()
     buyer_name_or_phone = request.GET.get('buyer_name')  # Get the search query
-    
 
     if buyer_name_or_phone:
         # Apply filter by buyer name or phone number
@@ -193,12 +198,11 @@ def index(request):
         # If page is not an integer, deliver first page
         products = paginator.page(1)
     except EmptyPage:
-        # If page is out of range (e.g., 9999), deliver last page of results
+        # If page is out of range (e.g., 9999), deliver the last page of results
         products = paginator.page(paginator.num_pages)
 
     payment_methods = PaymentMethod.objects.all()
 
-    
     context = {
         'carts': user_cart,
         'cart': cart_items,
@@ -289,6 +293,8 @@ def cart(request):
             # Calculate the total cost of items in the cart
             total_cost = user_cart.cartitem_set.aggregate(total_cost=Sum(models.F('product__price') * models.F('quantity')))['total_cost'] or 0.0
 
+            discount = Decimal(request.POST.get('discount', '0.0'))
+
             # Update the total_cost field in the Cart model
             user_cart.total_cost = total_cost
             user_cart.save()
@@ -306,6 +312,37 @@ def cart(request):
     # Handle the case where the user is not authenticated or there's no cart
     # For example, redirect to a login page or show a message
     return redirect('users:login')
+
+
+
+
+def update_discount(request):
+    if request.method == 'POST':
+        # Retrieve the user's cart
+        user_cart = Cart.objects.filter(user=request.user).first()
+
+        if user_cart:
+            # Get the new discount value from the form
+            new_discount_str = request.POST.get('new_discount', '0.0')
+
+            if new_discount_str and new_discount_str.replace('.', '', 1).isdigit():
+                # Convert the new discount to a Decimal
+                new_discount = Decimal(new_discount_str)
+
+                # Update the discount in the cart
+                user_cart.discount = new_discount
+                user_cart.save()
+
+                # Redirect back to the cart or another relevant page
+                return redirect('pos:index')
+            else:
+                # Show a message if the input is not a valid decimal
+                messages.error(request, 'Please provide a valid discount value.')
+
+    # Handle GET requests (display the form to update the discount)
+    return render(request, 'pos/index.html')
+
+
 
     
 def increment_cart_item(request, item_id):
@@ -403,7 +440,7 @@ def generate_pdf_receipt(sale, served_by_username):
 
     # headers
     sales_details = [
-        ["Item", "Price", "Total"]
+        ["Item", "Price", "Amount"]
     ]
 
     # data
@@ -414,12 +451,12 @@ def generate_pdf_receipt(sale, served_by_username):
         total_price = sale_item.quantity_sold * unit_price
 
         # Add the item, price, and the total amount to the detail
-        detail = [product_name,f"{unit_price:.2f}", f"{total_price:.2f}"]
+        detail = [product_name, "", ""]
 
         sales_details.append(detail)
 
         # Add the "1 x 300.00" line below the item
-        detail_quantity = [f"{quantity} x", f"{unit_price:.2f}", ""]
+        detail_quantity = [f"{quantity} x", f"{unit_price:.2f}", f"{total_price:.2f}"]
         sales_details.append(detail_quantity)
 
     # Calculate the y-position for sales details
@@ -450,15 +487,18 @@ def generate_pdf_receipt(sale, served_by_username):
     # Calculate positions for "Total VAT," "Total Payable," and "Total Paid"
     total_vat_y_position = sales_details_y_position - table_height - 25
     total_payable_y_position = total_vat_y_position - 15
-    total_paid_y_position = total_payable_y_position - 15
+    discount_y_position = total_payable_y_position - 15
+    total_paid_y_position = discount_y_position - 15
 
     # Add text for "Total VAT," "Total Payable," and "Total Paid" from the Sale model
     total_vat_text = f"VAT: {sale.vat:.2f}"
     total_payable_text = f"Total: {sale.total_amount:.2f}"
+    discount_text = f"Discount: {sale.discount:.2f}"
     total_paid_text = f"Total Paid: {sale.total_paid:.2f}"
 
     draw_left_aligned_text(p, total_vat_text, x_left_aligned, total_vat_y_position, "Helvetica", 10)
     draw_left_aligned_text(p, total_payable_text, x_left_aligned, total_payable_y_position, "Helvetica", 10)
+    draw_left_aligned_text(p, discount_text, x_left_aligned, discount_y_position, "Helvetica", 10)
     draw_left_aligned_text(p, total_paid_text, x_left_aligned, total_paid_y_position, "Helvetica", 10)
 
     # Draw double-dotted lines below the totals
@@ -530,6 +570,7 @@ def checkout(request):
             sale = Sale.objects.create(
                 user=request.user,
                 total_amount=user_cart.total_cost,  # Excluding VAT
+                discount = user_cart.discount,
                 vat=vat_amount,  # Set the VAT amount
                 total_paid=user_cart.total_payable,  # Including VAT
                 buyer=user_cart.buyer  # Associate the sale with the buyer from the cart

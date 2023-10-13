@@ -78,7 +78,8 @@ class Cart(models.Model):
     add_vat = models.BooleanField(default=False)  # Add this field
     total_payable = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     buyer = models.ForeignKey(Buyer, on_delete=models.SET_NULL, null=True, blank=True)  # Add buyer field
-    points = models.IntegerField(null=True, blank=True)  
+    points = models.IntegerField(null=True, blank=True)
+    discount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  
     
 
     def __init__(self, *args, **kwargs):

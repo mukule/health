@@ -16,6 +16,7 @@ urlpatterns = [
     path('sale/<int:sale_id>/', views.sale, name='sale'),
     path('sales_h/', views.sales_h, name='sales_h'),
     path('toggle_vat/', views.toggle_add_vat, name='toggle_vat'),
+    path('update_discount/', views.update_discount, name='update_discount'),
     
 
 ]
