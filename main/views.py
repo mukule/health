@@ -88,3 +88,8 @@ def buyers(request):
     }
 
     return render(request, 'main/buyers.html', context)
+
+
+
+def print_and_cut(request):
+   return render(request, 'main/receipt.html')

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Receipt</title>
+    <style>
+        /* Define your CSS styles for the receipt here */
+    </style>
+</head>
+<body>
+    <div class="receipt">
+        <h2>Receipt</h2>
+        <p><strong>Date:</strong> October 13, 2023</p>
+        <p><strong>Amount:</strong> $100.00</p>
+        <p><strong>Items:</strong></p>
+        <ul>
+            <li>Item 1: $25.00</li>
+            <li>Item 2: $50.00</li>
+            <li>Item 3: $25.00</li>
+        </ul>
+        
+        <!-- Add a print button -->
+        <button id="printButton">Print Receipt</button>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // jQuery code to handle the click event on the print button
+        $(document).ready(function() {
+            $("#printButton").click(function() {
+                window.print();
+            });
+        });
+    </script>
+</body>
+</html>

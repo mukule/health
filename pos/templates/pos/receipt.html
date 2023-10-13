@@ -1,63 +1,24 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 12px;
-        }
-        .receipt-header {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-        .receipt-info {
-            margin-bottom: 10px;
-        }
-        .receipt-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .receipt-table th, .receipt-table td {
-            border: 1px solid #000;
-            padding: 5px;
-            text-align: left;
-        }
-        .total-section {
-            text-align: right;
-            margin-top: 10px;
-        }
-    </style>
-</head>
-<body>
-    <div class="receipt-header">
-        <h1>Shop Name</h1>
-        <p>Shop Address</p>
-        <p>Date and Time: {{ sale.sale_date }}</p>
-        <p>Receipt ID: {{ sale.id }}</p>
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-flex align-items-center justify-content-between">
+                    <h4 class="mb-0 font-size-18">Receipt</h4>
+
+                </div>
+            </div>
+        </div>  
+
+        <div class="row">
+            <embed src="{{ pdf_data }}" width="100%" height="600px" type='application/pdf'>
+        </div>
+        
     </div>
-    <div class="receipt-info">
-        <table class="receipt-table">
-            <thead>
-                <tr>
-                    <th>Product</th>
-                    <th>Quantity</th>
-                    <th>Price</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in sale.saleitem_set.all %}
-                <tr>
-                    <td>{{ item.product.name }}</td>
-                    <td>{{ item.quantity }}</td>
-                    <td>{{ item.unit_price }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    <div class="total-section">
-        <p>Total Amount: {{ sale.total_amount }}</p>
-        <p>Total Payable: {{ sale.total_paid }}</p>
-    </div>
-</body>
-</html>
+</div>
+{% endblock content %}
+
+

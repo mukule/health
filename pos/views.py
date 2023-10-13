@@ -374,8 +374,8 @@ def generate_pdf_receipt(sale, served_by_username):
     # Define the content for shop address, sale date, PIN, and sale ID (customize as needed)
     shop_address = "St Ellis Building, City Hall Way, Nairobi"
     contact = "+254794085329 | info@healthtoday.co.ke "
-    sale_date = "Date: 2023-10-10"
-    shop_pin = "Shop PIN: 1234"
+    sale_date = sale.sale_date.strftime("Date: %Y-%m-%d %H:%M:%S") 
+    shop_pin = "Shop PIN: P0513834130"
     sale_id = f"CASH SALE: {sale.id}"
 
     # Calculate the y-positions for other content
@@ -468,7 +468,9 @@ def generate_pdf_receipt(sale, served_by_username):
     # FileResponse sets the Content-Disposition header so that browsers
     # present the option to save the file.
     buffer.seek(0)
-    return FileResponse(buffer, as_attachment=True, filename="receipt.pdf")
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = 'inline; filename="receipt.pdf"'
+    return response
 
 def draw_centered_text(pdf_canvas, text, y_position, page_width, font_name, font_size):
     # Calculate the x-position for centering the text
@@ -546,33 +548,11 @@ def checkout(request):
             current_day.save()
 
             # Generate the PDF receipt
+           
             pdf_data = generate_pdf_receipt(sale, request.user.username)
 
-
-            # Attempt to print the receipt to the POS printer (assumes the POS printer is the default printer)
-        try:
-            # Find the first USB printer
-            printer = None
-
-            for device in usb.core.find(find_all=True):
-                if "printer" in device.product.lower():
-                    printer = device
-                    break
-
-            if printer is not None:
-                printer.open()
-                printer.set(align='center')
-                printer.text(pdf_data.getvalue())
-                printer.cut()
-                printer.close()
-            else:
-                messages.warning(request, 'No USB printer found.')
-
-        except usb.core.USBError as usb_error:
-            messages.warning(request, f'USB error while printing receipt: {str(usb_error)}')
-        except Exception as printer_error:
-            messages.warning(request, f'Problem locating your printer, Please check on your printer')
-
+# Return the PDF as a response
+            return pdf_data
 
         else:
             messages.warning(request, 'Your cart is empty. Please add items to your cart before checking out.')
