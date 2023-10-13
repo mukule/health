@@ -27,7 +27,8 @@ from decimal import Decimal
 from django.utils import timezone  # Import timezone
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
-
+from barcode import generate
+from barcode.writer import ImageWriter
 receipts_storage = FileSystemStorage(location=settings.MEDIA_ROOT)
 
 
@@ -334,10 +335,10 @@ def remove_cart_item(request, item_id):
     cart_item = get_object_or_404(CartItem, id=item_id)
     cart_item.delete()
     return redirect('pos:index')
-
-
-
-
+import io
+from reportlab.pdfgen import canvas
+from reportlab.platypus import Table, TableStyle
+from reportlab.lib.pagesizes import letter
 
 def generate_pdf_receipt(sale, served_by_username):
     # Create a file-like buffer to receive PDF data.
@@ -353,8 +354,8 @@ def generate_pdf_receipt(sale, served_by_username):
     # Calculate the x-position for centering the text
     x_centered = (page_width - receipt_width) / 2
 
-    # Calculate the padding for both left and right sides
-    padding = 20  # Adjust the padding as needed
+    # Calculate the x-position for left-aligned text with a small padding
+    x_left_aligned = 20
 
     # Create the PDF object with custom page size (width x height)
     p = canvas.Canvas(buffer, pagesize=(page_width, page_height))
@@ -365,8 +366,8 @@ def generate_pdf_receipt(sale, served_by_username):
     # Reduce the space from which the title starts from the top
     title_y_position = page_height - 50
 
-    # Draw the title centered with padding
-    draw_centered_text(p, "Health today", title_y_position, page_width, "Helvetica-Bold", 12)
+    # Draw the title aligned to the left with padding
+    draw_left_aligned_text(p, "HEALTH TODAY LIMITED", x_left_aligned, title_y_position, "Helvetica-Bold", 12)
 
     # Set the font and font size for the shop details
     p.setFont("Helvetica", 10)
@@ -374,9 +375,9 @@ def generate_pdf_receipt(sale, served_by_username):
     # Define the content for shop address, sale date, PIN, and sale ID (customize as needed)
     shop_address = "St Ellis Building, City Hall Way, Nairobi"
     contact = "+254794085329 | info@healthtoday.co.ke "
-    sale_date = sale.sale_date.strftime("Date: %Y-%m-%d %H:%M:%S") 
+    sale_date = sale.sale_date.strftime("Date: %Y-%m-%d %H:%M:%S")
     shop_pin = "Shop PIN: P0513834130"
-    sale_id = f"CASH SALE: {sale.id}"
+    sale_id = f"CASH SALE: {sale.id:04d}"
 
     # Calculate the y-positions for other content
     address_y_position = title_y_position - 20
@@ -385,47 +386,55 @@ def generate_pdf_receipt(sale, served_by_username):
     pin_y_position = date_y_position - 15
     sale_id_y_position = pin_y_position - 15
 
-    # Draw the shop details centered with padding
-    draw_centered_text(p, shop_address, address_y_position, page_width, "Helvetica", 10)
-    draw_centered_text(p, contact, contact_y_position, page_width, "Helvetica", 10)
-    draw_centered_text(p, sale_date, date_y_position, page_width, "Helvetica", 10)
-    draw_centered_text(p, shop_pin, pin_y_position, page_width, "Helvetica", 10)
-    draw_centered_text(p, sale_id, sale_id_y_position, page_width, "Helvetica", 10)
+    # Draw the shop details aligned to the left with padding
+    draw_left_aligned_text(p, shop_address, x_left_aligned, address_y_position, "Helvetica", 10)
+    draw_left_aligned_text(p, contact, x_left_aligned, contact_y_position, "Helvetica", 10)
+    draw_left_aligned_text(p, sale_date, x_left_aligned, date_y_position, "Helvetica", 10)
+    draw_left_aligned_text(p, shop_pin, x_left_aligned, pin_y_position, "Helvetica", 10)
+    draw_left_aligned_text(p, sale_id, x_left_aligned, sale_id_y_position, "Helvetica", 10)
 
     # Draw double-dotted lines below the details
     dotted_line_y_position = sale_id_y_position - 10
     p.setDash(3, 3)  # Set the dash pattern for the lines
-    p.line(x_centered + padding, dotted_line_y_position, x_centered + receipt_width - padding, dotted_line_y_position)
+    p.line(x_left_aligned, dotted_line_y_position, x_left_aligned + receipt_width, dotted_line_y_position)
 
     # Set the font and font size for sales details headers
     p.setFont("Helvetica", 10)  # No longer bold
 
     # headers
     sales_details = [
-        ["Item", "Qty", "Price", "Total"]
+        ["Item", "Price", "Total"]
     ]
 
     # data
     for sale_item in SaleItem.objects.filter(sale=sale):
         product_name = sale_item.product.title
-        quantity = sale_item.quantity_sold
         unit_price = sale_item.unit_price
-        total_price = quantity * unit_price
-        detail = [product_name, quantity, f"{unit_price:.2f}", f"{total_price:.2f}"]
+        quantity = sale_item.quantity_sold
+        total_price = sale_item.quantity_sold * unit_price
+
+        # Add the item, price, and the total amount to the detail
+        detail = [product_name,f"{unit_price:.2f}", f"{total_price:.2f}"]
+
         sales_details.append(detail)
+
+        # Add the "1 x 300.00" line below the item
+        detail_quantity = [f"{quantity} x", f"{unit_price:.2f}", ""]
+        sales_details.append(detail_quantity)
 
     # Calculate the y-position for sales details
     sales_details_y_position = dotted_line_y_position - 25
 
     # Create the table without grid lines
-    table = Table(sales_details, colWidths=[70, 30, 40, 50], rowHeights=15)
+    table = Table(sales_details, colWidths=[90, 40, 50], rowHeights=15)
     table.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 10),  # Add left padding to align contents to the left
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),  # Align text to the left
         ('TEXTCOLOR', (0, 0), (-1, 0), (0, 0, 0)),  # Text color for the first row (headers)
     ]))
 
-    # Calculate the position to center the table
-    table_x_position = (page_width - receipt_width) / 2
+    # Calculate the position to align the table to the left
+    table_x_position = x_left_aligned
 
     # Calculate the total height of the table
     table_height = len(sales_details) * 15  # Assuming row height is 15
@@ -434,7 +443,7 @@ def generate_pdf_receipt(sale, served_by_username):
     if sales_details_y_position - table_height < 0:
         sales_details_y_position = table_height
 
-    # Draw the table
+    # Draw the table aligned to the left
     table.wrapOn(p, page_width, page_height)
     table.drawOn(p, table_x_position, sales_details_y_position - table_height)
 
@@ -448,18 +457,34 @@ def generate_pdf_receipt(sale, served_by_username):
     total_payable_text = f"Total: {sale.total_amount:.2f}"
     total_paid_text = f"Total Paid: {sale.total_paid:.2f}"
 
-    draw_centered_text(p, total_vat_text, total_vat_y_position, page_width, "Helvetica", 10)
-    draw_centered_text(p, total_payable_text, total_payable_y_position, page_width, "Helvetica", 10)
-    draw_centered_text(p, total_paid_text, total_paid_y_position, page_width, "Helvetica", 10)
+    draw_left_aligned_text(p, total_vat_text, x_left_aligned, total_vat_y_position, "Helvetica", 10)
+    draw_left_aligned_text(p, total_payable_text, x_left_aligned, total_payable_y_position, "Helvetica", 10)
+    draw_left_aligned_text(p, total_paid_text, x_left_aligned, total_paid_y_position, "Helvetica", 10)
 
     # Draw double-dotted lines below the totals
     p.setDash(3, 3)  # Set the dash pattern for the lines
-    p.line(x_centered + padding, total_paid_y_position - 10, x_centered + receipt_width - padding, total_paid_y_position - 10)
+    p.line(x_left_aligned, total_paid_y_position - 10, x_left_aligned + receipt_width, total_paid_y_position - 10)
 
     # Add a line for "You were served by"
     served_by_y_position = total_paid_y_position - 20
-    draw_centered_text(p, f"You were served by: {served_by_username}", served_by_y_position, page_width, "Helvetica", 10)
+    draw_left_aligned_text(p, f"You were served by: {served_by_username}", x_left_aligned, served_by_y_position, "Helvetica", 10)
 
+    # Generate a barcode for the sale ID
+    formatted_sale_id = f"{sale.id:04d}"
+
+    # Generate a barcode image using the formatted sale ID
+    barcode_image = generateBarcodeImage(formatted_sale_id)
+
+    # Calculate the x-position for centering the barcode
+    barcode_x_position = x_centered + (receipt_width - 100) / 2  # Adjust the width (100) as needed
+    barcode_y_position = served_by_y_position - 60  # Adjust as needed
+
+    thank_you_text = "Thank you for choosing Health Today."
+    thank_you_y_position = barcode_y_position - 40  # Adjust the vertical position
+    draw_left_aligned_text(p, thank_you_text, x_left_aligned, thank_you_y_position, "Helvetica", 10)
+
+    # Draw the barcode on the PDF
+    p.drawImage(barcode_image, barcode_x_position, barcode_y_position, width=100, height=50)
 
     # Close the PDF object cleanly, and we're done.
     p.showPage()
@@ -472,11 +497,17 @@ def generate_pdf_receipt(sale, served_by_username):
     response['Content-Disposition'] = 'inline; filename="receipt.pdf"'
     return response
 
-def draw_centered_text(pdf_canvas, text, y_position, page_width, font_name, font_size):
-    # Calculate the x-position for centering the text
-    x_centered = (page_width - pdf_canvas.stringWidth(text, font_name, font_size)) / 2
+def draw_left_aligned_text(pdf_canvas, text, x_position, y_position, font_name, font_size):
     pdf_canvas.setFont(font_name, font_size)
-    pdf_canvas.drawString(x_centered, y_position, text)
+    pdf_canvas.drawString(x_position, y_position, text)
+
+
+def generateBarcodeImage(data):
+    # Generate a barcode image using the Python barcode library
+    barcode = generate('Code128', str(data), writer=ImageWriter(), output='barcode_image')
+    return barcode
+
+
 
 from django.db import transaction
 
