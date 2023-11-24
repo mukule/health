@@ -44,7 +44,7 @@
     </div>
     
     <div class="row">
-        <div class="col-md-3">
+        <div class="col-md-3 d-none d-md-block">
             <div class="card">
                 <div class="card-body">
                     <ul class="list-group mb-4 border-0">
@@ -60,6 +60,7 @@
             </div>
         </div>
         
+        
         <div class="col-md-9">
             <div id="carouselExampleCaption" class="carousel slide" data-ride="carousel">
                 <div class="carousel-inner" role="listbox">
@@ -70,7 +71,7 @@
                                 <div class="carousel-caption d-block">
                                     <div style="background-color: rgba(0, 0, 0, 0.7); padding: 30px; display: inline-block; border-radius: 10px;">
                                         <h3 class="text-white">{{ product.title }}</h3>
-                                        <a href="https://wa.me/+254106770531?text=I%20want%20to%20order%20{{ product.title }}" class="btn btn-success" style="border-radius: 10px;">
+                                        <a href="https://wa.me/+254794085329?text=I%20want%20to%20order%20{{ product.title }}" class="btn btn-success" style="border-radius: 10px;">
                                             <i class="fab fa-whatsapp"></i> Order via WhatsApp
                                         </a>
                                     </div>
@@ -91,8 +92,7 @@
         </div>
     </div>
 
-   
-    <div id="categoryCarousel" class="carousel slide mt-2" data-ride="false">
+    <div id="categoryCarousel" class="carousel slide mt-2 d-none d-md-block" data-ride="false">
         <div class="carousel-inner">
             {% for category in categories %}
                 {% if forloop.counter0|divisibleby:6 %}
@@ -172,43 +172,6 @@
             {% endfor %}
         </div>
         
-            <!-- Pagination Links (Centered) -->
-            <div class="col-12 text-center">
-                <ul class="pagination pagination-lg d-flex justify-content-center">
-                    {% if products.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link waves-effect" href="?page=1" aria-label="First">
-                                <span aria-hidden="true">&laquo;&laquo;</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link waves-effect" href="?page={{ products.previous_page_number }}" aria-label="Previous">
-                                <span aria-hidden="true">&laquo;</span>
-                            </a>
-                        </li>
-                    {% endif %}
-
-                    {% for i in products.paginator.page_range %}
-                        <li class="page-item {% if products.number == i %}active{% endif %}">
-                            <a class="page-link waves-effect" href="?page={{ i }}">{{ i }}</a>
-                        </li>
-                    {% endfor %}
-
-                    {% if products.has_next %}
-                        <li class="page-item">
-                            <a class="page-link waves-effect" href="?page={{ products.next_page_number }}" aria-label="Next">
-                                <span aria-hidden="true">&raquo;</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link waves-effect" href="?page={{ products.paginator.num_pages }}" aria-label="Last">
-                                <span aria-hidden="true">&raquo;&raquo;</span>
-                            </a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
-
         
     </div>
 </div>
