@@ -82,16 +82,16 @@
     </div>
 </header>
 
+
 <div class="topnav">
-    <div class="container-fluid">
-        <nav class="navbar navbar-light navbar-expand-lg topnav-menu">
-            
-            <div class="collapse navbar-collapse" id="topnav-menu-content">
+    <div class="container text-center">
+        <nav class="navbar navbar-light navbar-expand-lg">
+            <div class="mx-auto" style="justify-content: center;">
                 {% if user.is_authenticated %}
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'product:products' %}">
-                            Products
+                        <a class="nav-link" href="{% url 'pos:menu' %}">
+                            Inventory
                         </a>
                     </li>
                     <li class="nav-item">
@@ -109,51 +109,14 @@
                             Sales
                         </a>
                     </li>
-            
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'product:stock' %}">
-                            Stock
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'product:low_stock' %}">
-                            Running out
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'product:out_of_stock' %}">
-                            Out of Stock
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'product:stock_movement' %}">
-                            Stock Movement
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'product:stocks' %}">
-                            Stock Update
-                        </a>
-                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'main:buyers' %}">
-                            Buyers
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'users:staffs' %}">
-                            Users
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'product:suppliers' %}">
-                            Suppliers
+                            Customers
                         </a>
                     </li>
                 </ul>
                 {% endif %}
             </div>
-            
         </nav>
     </div>
-</div> 
+</div>

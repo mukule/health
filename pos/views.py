@@ -1,3 +1,10 @@
+# Import datetime from Python's datetime module
+from datetime import datetime, timedelta
+from django.db.models import Sum
+from django.db.models import *
+from datetime import timedelta
+import json
+from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from product.models import *
 from pos.models import *
@@ -6,7 +13,7 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-import json 
+import json
 from django.utils import timezone
 from datetime import date
 import datetime
@@ -24,7 +31,7 @@ from django.db.models import Sum, F
 from django.db.models import DecimalField
 from django.db.models.functions import Coalesce
 from decimal import Decimal
-from django.utils import timezone  # Import timezone
+from django.utils import timezone
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 from barcode import generate
@@ -41,21 +48,26 @@ def period(request):
 
     # Check if the current year exists in the Year model
     year, created = Year.objects.get_or_create(year=current_year)
-    
+
     # Check if the current month exists in the Month model for the current year
-    month, created = Month.objects.get_or_create(year=year, month=current_month)
-    
+    month, created = Month.objects.get_or_create(
+        year=year, month=current_month)
+
     # Attempt to get the current week
     try:
-        current_week = Week.objects.get(month=month, week_number=current_week_number)
+        current_week = Week.objects.get(
+            month=month, week_number=current_week_number)
     except Week.DoesNotExist:
         # Create the current week if it doesn't exist
-        current_week = Week.objects.create(month=month, week_number=current_week_number)
+        current_week = Week.objects.create(
+            month=month, week_number=current_week_number)
 
     # Check if the days of the current week are already created
     if not Day.objects.filter(week=current_week).exists():
         # Create the days of the current week and set their dates
-        current_date_in_week = current_date - timedelta(days=current_date.weekday())  # Calculate the start date (Monday) of the current week
+        # Calculate the start date (Monday) of the current week
+        current_date_in_week = current_date - \
+            timedelta(days=current_date.weekday())
         for day_number in range(7):
             day, created = Day.objects.get_or_create(
                 week=current_week,
@@ -68,33 +80,32 @@ def period(request):
     # Calculate sales amount for the current week, current month, and current year
     start_of_week = current_date - timedelta(days=current_date.weekday())
     end_of_week = start_of_week + timedelta(days=6)
-    
+
     sales_week = Sale.objects.filter(
         sale_date__gte=start_of_week,
         sale_date__lte=end_of_week
     ).aggregate(total_sales_week=Sum('total_amount'))['total_sales_week'] or 0.0
-    
+
     sales_month = Sale.objects.filter(
         sale_date__year=current_year,
         sale_date__month=current_month
     ).aggregate(total_sales_month=Sum('total_amount'))['total_sales_month'] or 0.0
-    
+
     sales_year = Sale.objects.filter(
         sale_date__year=current_year
     ).aggregate(total_sales_year=Sum('total_amount'))['total_sales_year'] or 0.0
-    
+
     # Update the sales amounts for the current week, current month, and current year
     current_week.sales_amount = sales_week
     current_week.save()
-    
+
     month.sales_amount = sales_month
     month.save()
-    
+
     year.sales_amount = sales_year
     year.save()
 
     return HttpResponse(status=200)
-
 
 
 @login_required  # Require authentication to access this view
@@ -133,7 +144,8 @@ def index(request):
             # Calculate the total cost of items in the cart
             total_cost = round(user_cart.cartitem_set.aggregate(
                 total_cost=Coalesce(
-                    Sum(F('product__price') * F('quantity'), output_field=DecimalField()),
+                    Sum(F('product__price') * F('quantity'),
+                        output_field=DecimalField()),
                     Decimal('0.00')
                 )
             )['total_cost'])
@@ -173,7 +185,8 @@ def index(request):
 
     if buyer_name_or_phone:
         # Apply filter by buyer name or phone number
-        filtered_buyers = buyers.filter(Q(first_name__icontains=buyer_name_or_phone) | Q(last_name__icontains=buyer_name_or_phone) | Q(phone_number__icontains=buyer_name_or_phone))
+        filtered_buyers = buyers.filter(Q(first_name__icontains=buyer_name_or_phone) | Q(
+            last_name__icontains=buyer_name_or_phone) | Q(phone_number__icontains=buyer_name_or_phone))
 
         if filtered_buyers.exists():
             # If there are filtered buyers, update the cart's buyer
@@ -218,8 +231,6 @@ def index(request):
     return render(request, 'pos/index.html', context)
 
 
-
-
 @login_required
 def toggle_add_vat(request):
     # Get the user's cart
@@ -241,8 +252,6 @@ def toggle_add_vat(request):
     return redirect('pos:index')
 
 
-
-
 @login_required
 def add_to_cart(request, product_id, quantity=1):
     # Retrieve the product based on the product_id or handle errors if it doesn't exist
@@ -252,11 +261,13 @@ def add_to_cart(request, product_id, quantity=1):
     if product.quantity <= 0:
         # Handle the case where the product is out of stock
         messages.error(request, 'This product is out of stock.')
-        return redirect('pos:index')  # Redirect to the product list page or another appropriate URL
+        # Redirect to the product list page or another appropriate URL
+        return redirect('pos:index')
 
     # Retrieve or create the user's cart using the custom user model
     User = get_user_model()  # Get the custom user model
-    user = User.objects.get(username=request.user.username)  # Assuming the user is authenticated
+    # Assuming the user is authenticated
+    user = User.objects.get(username=request.user.username)
     cart, created = Cart.objects.get_or_create(user=user)
 
     # Retrieve the cart item for the product or create it if it doesn't exist
@@ -265,8 +276,10 @@ def add_to_cart(request, product_id, quantity=1):
     # Check if adding the specified quantity exceeds the available quantity
     if cart_item.quantity is not None and cart_item.quantity + quantity > product.quantity:
         # Handle the case where there isn't enough quantity available
-        messages.error(request, 'There is not enough quantity available for this product.')
-        return redirect('pos:index')  # Redirect to the product list page or another appropriate URL
+        messages.error(
+            request, 'There is not enough quantity available for this product.')
+        # Redirect to the product list page or another appropriate URL
+        return redirect('pos:index')
 
     # If there is enough quantity available, update the cart
     if cart_item.quantity is not None:
@@ -276,12 +289,12 @@ def add_to_cart(request, product_id, quantity=1):
     cart_item.save()
 
     # Show a success message with the product title and quantity
-    messages.success(request, f'Added {quantity} {product.title} to cart successfully!')
+    messages.success(
+        request, f'Added {quantity} {product.title} to cart successfully!')
 
     # Redirect to the cart or another appropriate URL
     return redirect('pos:index')  # Replace 'cart' with your cart URL name
 
-from django.db.models import Sum
 
 def cart(request):
     # Check if the user is authenticated
@@ -291,7 +304,8 @@ def cart(request):
 
         if user_cart:
             # Calculate the total cost of items in the cart
-            total_cost = user_cart.cartitem_set.aggregate(total_cost=Sum(models.F('product__price') * models.F('quantity')))['total_cost'] or 0.0
+            total_cost = user_cart.cartitem_set.aggregate(total_cost=Sum(
+                models.F('product__price') * models.F('quantity')))['total_cost'] or 0.0
 
             discount = Decimal(request.POST.get('discount', '0.0'))
 
@@ -308,12 +322,10 @@ def cart(request):
             }
 
             return render(request, 'pos/cart.html', context)
-    
+
     # Handle the case where the user is not authenticated or there's no cart
     # For example, redirect to a login page or show a message
     return redirect('users:login')
-
-
 
 
 def update_discount(request):
@@ -337,14 +349,13 @@ def update_discount(request):
                 return redirect('pos:index')
             else:
                 # Show a message if the input is not a valid decimal
-                messages.error(request, 'Please provide a valid discount value.')
+                messages.error(
+                    request, 'Please provide a valid discount value.')
 
     # Handle GET requests (display the form to update the discount)
     return render(request, 'pos/index.html')
 
 
-
-    
 def increment_cart_item(request, item_id):
     cart_item = get_object_or_404(CartItem, id=item_id)
 
@@ -354,28 +365,28 @@ def increment_cart_item(request, item_id):
         cart_item.save()
     else:
         # If incrementing is not allowed, show an error message
-        messages.error(request, "Cannot increase quantity beyond available quantity.")
+        messages.error(
+            request, "Cannot increase quantity beyond available quantity.")
 
     return redirect('pos:index')
 
+
 def decrement_cart_item(request, item_id):
     cart_item = get_object_or_404(CartItem, id=item_id)
-    
+
     # Check if the quantity is greater than 1 before decrementing
     if cart_item.quantity > 1:
         cart_item.quantity -= 1
         cart_item.save()
-    
+
     return redirect('pos:index')
+
 
 def remove_cart_item(request, item_id):
     cart_item = get_object_or_404(CartItem, id=item_id)
     cart_item.delete()
     return redirect('pos:index')
-import io
-from reportlab.pdfgen import canvas
-from reportlab.platypus import Table, TableStyle
-from reportlab.lib.pagesizes import letter
+
 
 def generate_pdf_receipt(sale, served_by_username):
     # Create a file-like buffer to receive PDF data.
@@ -404,7 +415,8 @@ def generate_pdf_receipt(sale, served_by_username):
     title_y_position = page_height - 50
 
     # Draw the title aligned to the left with padding
-    draw_left_aligned_text(p, "HEALTH TODAY LIMITED", x_left_aligned, title_y_position, "Helvetica-Bold", 12)
+    draw_left_aligned_text(p, "HEALTH TODAY LIMITED",
+                           x_left_aligned, title_y_position, "Helvetica-Bold", 12)
 
     # Set the font and font size for the shop details
     p.setFont("Helvetica", 10)
@@ -424,16 +436,22 @@ def generate_pdf_receipt(sale, served_by_username):
     sale_id_y_position = pin_y_position - 15
 
     # Draw the shop details aligned to the left with padding
-    draw_left_aligned_text(p, shop_address, x_left_aligned, address_y_position, "Helvetica", 10)
-    draw_left_aligned_text(p, contact, x_left_aligned, contact_y_position, "Helvetica", 10)
-    draw_left_aligned_text(p, sale_date, x_left_aligned, date_y_position, "Helvetica", 10)
-    draw_left_aligned_text(p, shop_pin, x_left_aligned, pin_y_position, "Helvetica", 10)
-    draw_left_aligned_text(p, sale_id, x_left_aligned, sale_id_y_position, "Helvetica", 10)
+    draw_left_aligned_text(p, shop_address, x_left_aligned,
+                           address_y_position, "Helvetica", 10)
+    draw_left_aligned_text(p, contact, x_left_aligned,
+                           contact_y_position, "Helvetica", 10)
+    draw_left_aligned_text(p, sale_date, x_left_aligned,
+                           date_y_position, "Helvetica", 10)
+    draw_left_aligned_text(p, shop_pin, x_left_aligned,
+                           pin_y_position, "Helvetica", 10)
+    draw_left_aligned_text(p, sale_id, x_left_aligned,
+                           sale_id_y_position, "Helvetica", 10)
 
     # Draw double-dotted lines below the details
     dotted_line_y_position = sale_id_y_position - 10
     p.setDash(3, 3)  # Set the dash pattern for the lines
-    p.line(x_left_aligned, dotted_line_y_position, x_left_aligned + receipt_width, dotted_line_y_position)
+    p.line(x_left_aligned, dotted_line_y_position,
+           x_left_aligned + receipt_width, dotted_line_y_position)
 
     # Set the font and font size for sales details headers
     p.setFont("Helvetica", 10)  # No longer bold
@@ -456,7 +474,8 @@ def generate_pdf_receipt(sale, served_by_username):
         sales_details.append(detail)
 
         # Add the "1 x 300.00" line below the item
-        detail_quantity = [f"{quantity} x", f"{unit_price:.2f}", f"{total_price:.2f}"]
+        detail_quantity = [f"{quantity} x",
+                           f"{unit_price:.2f}", f"{total_price:.2f}"]
         sales_details.append(detail_quantity)
 
     # Calculate the y-position for sales details
@@ -465,9 +484,11 @@ def generate_pdf_receipt(sale, served_by_username):
     # Create the table without grid lines
     table = Table(sales_details, colWidths=[90, 40, 50], rowHeights=15)
     table.setStyle(TableStyle([
-        ('LEFTPADDING', (0, 0), (-1, -1), 10),  # Add left padding to align contents to the left
+        # Add left padding to align contents to the left
+        ('LEFTPADDING', (0, 0), (-1, -1), 10),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),  # Align text to the left
-        ('TEXTCOLOR', (0, 0), (-1, 0), (0, 0, 0)),  # Text color for the first row (headers)
+        # Text color for the first row (headers)
+        ('TEXTCOLOR', (0, 0), (-1, 0), (0, 0, 0)),
     ]))
 
     # Calculate the position to align the table to the left
@@ -496,18 +517,24 @@ def generate_pdf_receipt(sale, served_by_username):
     discount_text = f"Discount: {sale.discount:.2f}"
     total_paid_text = f"Total Paid: {sale.total_paid:.2f}"
 
-    draw_left_aligned_text(p, total_vat_text, x_left_aligned, total_vat_y_position, "Helvetica", 10)
-    draw_left_aligned_text(p, total_payable_text, x_left_aligned, total_payable_y_position, "Helvetica", 10)
-    draw_left_aligned_text(p, discount_text, x_left_aligned, discount_y_position, "Helvetica", 10)
-    draw_left_aligned_text(p, total_paid_text, x_left_aligned, total_paid_y_position, "Helvetica", 10)
+    draw_left_aligned_text(p, total_vat_text, x_left_aligned,
+                           total_vat_y_position, "Helvetica", 10)
+    draw_left_aligned_text(p, total_payable_text, x_left_aligned,
+                           total_payable_y_position, "Helvetica", 10)
+    draw_left_aligned_text(p, discount_text, x_left_aligned,
+                           discount_y_position, "Helvetica", 10)
+    draw_left_aligned_text(p, total_paid_text, x_left_aligned,
+                           total_paid_y_position, "Helvetica", 10)
 
     # Draw double-dotted lines below the totals
     p.setDash(3, 3)  # Set the dash pattern for the lines
-    p.line(x_left_aligned, total_paid_y_position - 10, x_left_aligned + receipt_width, total_paid_y_position - 10)
+    p.line(x_left_aligned, total_paid_y_position - 10,
+           x_left_aligned + receipt_width, total_paid_y_position - 10)
 
     # Add a line for "You were served by"
     served_by_y_position = total_paid_y_position - 20
-    draw_left_aligned_text(p, f"You were served by: {served_by_username}", x_left_aligned, served_by_y_position, "Helvetica", 10)
+    draw_left_aligned_text(
+        p, f"You were served by: {served_by_username}", x_left_aligned, served_by_y_position, "Helvetica", 10)
 
     # Generate a barcode for the sale ID
     formatted_sale_id = f"{sale.id:04d}"
@@ -516,15 +543,18 @@ def generate_pdf_receipt(sale, served_by_username):
     barcode_image = generateBarcodeImage(formatted_sale_id)
 
     # Calculate the x-position for centering the barcode
-    barcode_x_position = x_centered + (receipt_width - 100) / 2  # Adjust the width (100) as needed
+    # Adjust the width (100) as needed
+    barcode_x_position = x_centered + (receipt_width - 100) / 2
     barcode_y_position = served_by_y_position - 60  # Adjust as needed
 
     thank_you_text = "Thank you for choosing Health Today."
     thank_you_y_position = barcode_y_position - 40  # Adjust the vertical position
-    draw_left_aligned_text(p, thank_you_text, x_left_aligned, thank_you_y_position, "Helvetica", 10)
+    draw_left_aligned_text(p, thank_you_text, x_left_aligned,
+                           thank_you_y_position, "Helvetica", 10)
 
     # Draw the barcode on the PDF
-    p.drawImage(barcode_image, barcode_x_position, barcode_y_position, width=100, height=50)
+    p.drawImage(barcode_image, barcode_x_position,
+                barcode_y_position, width=100, height=50)
 
     # Close the PDF object cleanly, and we're done.
     p.showPage()
@@ -537,6 +567,7 @@ def generate_pdf_receipt(sale, served_by_username):
     response['Content-Disposition'] = 'inline; filename="receipt.pdf"'
     return response
 
+
 def draw_left_aligned_text(pdf_canvas, text, x_position, y_position, font_name, font_size):
     pdf_canvas.setFont(font_name, font_size)
     pdf_canvas.drawString(x_position, y_position, text)
@@ -544,12 +575,10 @@ def draw_left_aligned_text(pdf_canvas, text, x_position, y_position, font_name, 
 
 def generateBarcodeImage(data):
     # Generate a barcode image using the Python barcode library
-    barcode = generate('Code128', str(data), writer=ImageWriter(), output='barcode_image')
+    barcode = generate('Code128', str(
+        data), writer=ImageWriter(), output='barcode_image')
     return barcode
 
-
-
-from django.db import transaction
 
 @transaction.atomic
 def checkout(request):
@@ -570,7 +599,7 @@ def checkout(request):
             sale = Sale.objects.create(
                 user=request.user,
                 total_amount=user_cart.total_cost,  # Excluding VAT
-                discount = user_cart.discount,
+                discount=user_cart.discount,
                 vat=vat_amount,  # Set the VAT amount
                 total_paid=user_cart.total_payable,  # Including VAT
                 buyer=user_cart.buyer  # Associate the sale with the buyer from the cart
@@ -604,6 +633,7 @@ def checkout(request):
             # Clear the user's cart after a successful sale
             user_cart.products.clear()
             user_cart.total_cost = 0
+            user_cart.discount = 0
             user_cart.save()
 
             # Update the Day model for the current day
@@ -620,21 +650,20 @@ def checkout(request):
             current_day.save()
 
             # Generate the PDF receipt
-           
+
             pdf_data = generate_pdf_receipt(sale, request.user.username)
 
 # Return the PDF as a response
             return pdf_data
 
         else:
-            messages.warning(request, 'Your cart is empty. Please add items to your cart before checking out.')
+            messages.warning(
+                request, 'Your cart is empty. Please add items to your cart before checking out.')
 
     except Exception as e:
         messages.error(request, f'An error occurred during checkout: {str(e)}')
 
     return redirect('pos:cart')
-
-
 
 
 def sales(request):
@@ -646,15 +675,18 @@ def sales(request):
     print(current_date)
 
     # Calculate the start and end of the current day
-    start_of_day = timezone.make_aware(timezone.datetime(current_date.year, current_date.month, current_date.day, 0, 0, 0))
-    end_of_day = timezone.make_aware(timezone.datetime(current_date.year, current_date.month, current_date.day, 23, 59, 59))
+    start_of_day = timezone.make_aware(timezone.datetime(
+        current_date.year, current_date.month, current_date.day, 0, 0, 0))
+    end_of_day = timezone.make_aware(timezone.datetime(
+        current_date.year, current_date.month, current_date.day, 23, 59, 59))
 
     # Retrieve a list of sales records for the current date
-    sales = Sale.objects.filter(sale_date__range=(start_of_day, end_of_day)).order_by('-sale_date')
+    sales = Sale.objects.filter(sale_date__range=(
+        start_of_day, end_of_day)).order_by('-sale_date')
 
     # Calculate total sales amount for the current date
-    total_sales_amount = sales.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
-  
+    total_sales_amount = sales.aggregate(Sum('total_amount'))[
+        'total_amount__sum'] or 0
 
     # Create a Paginator object with 10 items per page
     paginator = Paginator(sales, 10)
@@ -670,17 +702,19 @@ def sales(request):
     total_amounts = [float(sale.total_amount) for sale in sales]
 
     # Convert the data to JSON format for use in JavaScript
-    sales_data_json = json.dumps({'sale_ids': sale_ids, 'total_amounts': total_amounts})
+    sales_data_json = json.dumps(
+        {'sale_ids': sale_ids, 'total_amounts': total_amounts})
     print(sales_data_json)
 
     context = {
         'sales': page,
         'total_sales_amount': total_sales_amount,
         'sales_data_json': sales_data_json,
-        'date':current_date
+        'date': current_date
     }
 
     return render(request, 'pos/sales.html', context)
+
 
 def sale(request, sale_id):
     # Retrieve the sale object for the given sale_id or return a 404 if not found
@@ -695,14 +729,18 @@ def sale(request, sale_id):
     current_date = current_datetime.date()
 
     # Calculate the start and end of the current day
-    start_of_day = timezone.make_aware(timezone.datetime(current_date.year, current_date.month, current_date.day, 0, 0, 0))
-    end_of_day = timezone.make_aware(timezone.datetime(current_date.year, current_date.month, current_date.day, 23, 59, 59))
+    start_of_day = timezone.make_aware(timezone.datetime(
+        current_date.year, current_date.month, current_date.day, 0, 0, 0))
+    end_of_day = timezone.make_aware(timezone.datetime(
+        current_date.year, current_date.month, current_date.day, 23, 59, 59))
 
     # Retrieve a list of sales records for the current date
-    sales = Sale.objects.filter(sale_date__range=(start_of_day, end_of_day)).order_by('-sale_date')
+    sales = Sale.objects.filter(sale_date__range=(
+        start_of_day, end_of_day)).order_by('-sale_date')
 
     # Calculate total sales amount for the current date
-    total_sales_amount = sales.aggregate(Sum('total_amount'))['total_amount__sum'] or 0
+    total_sales_amount = sales.aggregate(Sum('total_amount'))[
+        'total_amount__sum'] or 0
 
     # Create a Paginator object with 10 items per page
     paginator = Paginator(sales, 10)
@@ -715,49 +753,47 @@ def sale(request, sale_id):
 
     # Prepare data for a bar chart displaying total sales amounts for the current date
     sale_ids = [sale.id for sale in sales]
-    total_amounts = [float(sale.total_amount) for sale in sales]  # Convert Decimal to float
+    total_amounts = [float(sale.total_amount)
+                     for sale in sales]  # Convert Decimal to float
 
     # Prepare data for a chart displaying sold items
     sold_item_labels = [item.product.title for item in sale_items]
     sold_item_quantities = [item.quantity_sold for item in sale_items]
 
     # Convert the data to JSON format for use in JavaScript
-    sales_data_json = json.dumps({'sale_ids': sale_ids, 'total_amounts': total_amounts})
-    sold_items_data_json = json.dumps({'labels': sold_item_labels, 'quantities': sold_item_quantities})
+    sales_data_json = json.dumps(
+        {'sale_ids': sale_ids, 'total_amounts': total_amounts})
+    sold_items_data_json = json.dumps(
+        {'labels': sold_item_labels, 'quantities': sold_item_quantities})
 
     context = {
         'sale': sale,
-        'date':current_date,
+        'date': current_date,
         'today_sales': sale_items,
         'sales': page,
         'total_sales_amount': total_sales_amount,
         'sales_data_json': sales_data_json,  # Pass the total sales data to the template
-        'sold_items_data_json': sold_items_data_json,  # Pass the sold items data to the template
+        # Pass the sold items data to the template
+        'sold_items_data_json': sold_items_data_json,
     }
 
     return render(request, 'pos/sales.html', context)
 
 
-import json
-from decimal import Decimal
-from datetime import timedelta
-
 # Custom JSON encoder to handle Decimal objects
+
 class DecimalEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Decimal):
             return str(obj)
         return super(DecimalEncoder, self).default(obj)
 
+
 class DecimalEncoder(DjangoJSONEncoder):
     def default(self, obj):
         if isinstance(obj, Decimal):
             return str(obj)
         return super(DecimalEncoder, self).default(obj)
-  
-from datetime import datetime, timedelta  # Import datetime from Python's datetime module
-
-from django.db.models import *
 
 
 def sales_h(request):
@@ -772,22 +808,30 @@ def sales_h(request):
         try:
             # Convert start_date and end_date to datetime objects with time components
             start_date = datetime.strptime(start_date_param, '%Y-%m-%d')
-            end_date = datetime.strptime(end_date_param + ' 23:59:59', '%Y-%m-%d %H:%M:%S')
+            end_date = datetime.strptime(
+                end_date_param + ' 23:59:59', '%Y-%m-%d %H:%M:%S')
 
             # Convert the start and end dates to the timezone used in the Sale model
-            start_date = timezone.make_aware(start_date, timezone.get_current_timezone())
-            end_date = timezone.make_aware(end_date, timezone.get_current_timezone())
+            start_date = timezone.make_aware(
+                start_date, timezone.get_current_timezone())
+            end_date = timezone.make_aware(
+                end_date, timezone.get_current_timezone())
 
             # Filter sales within the specified date range
-            sales_data = sales_data.filter(sale_date__range=(start_date, end_date))
+            sales_data = sales_data.filter(
+                sale_date__range=(start_date, end_date))
         except ValueError:
             # Handle invalid date format
-            messages.warning(request, 'Invalid date format. Please use YYYY-MM-DD format.')
+            messages.warning(
+                request, 'Invalid date format. Please use YYYY-MM-DD format.')
 
     # Calculate the total amounts
-    total_sales_amount = sales_data.aggregate(total_sales=Sum('total_amount'))['total_sales'] or Decimal('0.0')
-    total_vat_amount = sales_data.aggregate(total_vat=Sum('vat'))['total_vat'] or Decimal('0.0')
-    total_paid_amount = sales_data.aggregate(total_paid=Sum('total_paid'))['total_paid'] or Decimal('0.0')
+    total_sales_amount = sales_data.aggregate(total_sales=Sum('total_amount'))[
+        'total_sales'] or Decimal('0.0')
+    total_vat_amount = sales_data.aggregate(total_vat=Sum('vat'))[
+        'total_vat'] or Decimal('0.0')
+    total_paid_amount = sales_data.aggregate(total_paid=Sum('total_paid'))[
+        'total_paid'] or Decimal('0.0')
 
     # Get sold items for each sale
     sold_items = SaleItem.objects.filter(sale__in=sales_data)
@@ -799,7 +843,8 @@ def sales_h(request):
 
     # Calculate total sales amount for each category
     category_sales = sold_items.values('product__category__name').annotate(
-        total_category_sales=Sum(F('quantity_sold') * F('unit_price'), output_field=DecimalField())
+        total_category_sales=Sum(
+            F('quantity_sold') * F('unit_price'), output_field=DecimalField())
     )
 
     # Prepare chart data
@@ -814,8 +859,6 @@ def sales_h(request):
     chart_data_json = json.dumps(chart_data, cls=DecimalEncoder)
     print(chart_data_json)
 
-   
-
     context = {
         'sales_page': sales_data,          # Include paginated sales data
         'total': total_sales_amount,
@@ -828,3 +871,37 @@ def sales_h(request):
     return render(request, 'pos/sales_h.html', context)
 
 
+def menu(request):
+    return render(request, 'pos/menu.html')
+
+
+def expiring(request):
+    # Get the current date
+    current_date = timezone.now().date()
+
+    # Retrieve expired products and products that are 5 days from expiry
+    expired_products = Product.objects.filter(expiry_date__lt=current_date)
+    print(expired_products)
+    expiring_soon_products = Product.objects.filter(
+        expiry_date__gt=current_date,
+        expiry_date__lte=current_date + timezone.timedelta(days=5)
+    )
+
+    print(expiring_soon_products)
+
+    context = {
+        'expired': expired_products,
+        'expiring_soon': expiring_soon_products
+    }
+
+    return render(request, 'pos/expiring.html', context)
+
+
+def receivings(request):
+    receivings_list = Receiving.objects.all()
+    return render(request, 'pos/receivings.html', {'receivings_list': receivings_list})
+
+
+def supplies(request):
+    supplies_list = Supply.objects.all()
+    return render(request, 'pos/supplies.html', {'supplies_list': supplies_list})

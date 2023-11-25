@@ -1,0 +1,133 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .card {
+        height: 100%;
+    }
+
+    .card-body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+</style>
+
+<div class="page-content">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3 mb-4">
+               <a href="{% url 'product:products' %}">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Products</h5>
+                    </div>
+                </div>
+               </a>
+            </div>
+            <div class="col-md-3 mb-4">
+                <a href="{% url 'product:stock' %}">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Stock</h5>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3 mb-4">
+               <a href="{% url 'product:low_stock' %}">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Low stock</h5>
+                    </div>
+                </div>
+               </a>
+            </div>
+            <div class="col-md-3 mb-4">
+              <a href="{% url 'product:out_of_stock' %}">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Out of Stock</h5>
+                    </div>
+                </div>
+              </a>
+            </div>
+            <div class="col-md-3 mb-4">
+              <a href="{% url 'product:stock_movement' %}">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Stock Movement</h5>
+                    </div>
+                </div>
+              </a>
+            </div>
+            <div class="col-md-3 mb-4">
+                <a href="{% url 'product:stocks' %}">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Stock Take</h5>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3 mb-4">
+                <a href="{% url 'pos:expiring' %}">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Expiry</h5>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3 mb-4">
+               <a href="{% url 'users:staffs' %}">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Staffs</h5>
+                    </div>
+                </div>
+               </a>
+            </div>
+            <div class="col-md-3 mb-4">
+                <a href="{% url 'product:suppliers' %}">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Suppliers</h5>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3 mb-4">
+                <a href="{% url 'pos:received' %}">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Receivings</h5>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3 mb-4">
+                <a href="{% url 'product:dispatches' %}">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Dispatch</h5>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3 mb-4">
+                <a href="{% url 'pos:supplies' %}">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Cost</h5>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

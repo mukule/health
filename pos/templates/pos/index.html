@@ -4,17 +4,18 @@
 {% block content %}
 <style>
     .custom-card-group {
-        margin-right: 0px; /* Adjust as needed */
-        margin-left: 0px;  /* Adjust as needed */
+        margin-right: 0px;
+        margin-left: 0px; 
     }
 
     .custom-card {
-        padding: 0px; /* Adjust as needed */
+        padding: 2px;
+        border: none;
     }
 
     .custom-card-body {
         padding: 5px;
-        font-size: 10px; /* Adjust as needed */
+        font-size: 10px;
     }
 </style>
 <div class="page-content">
@@ -46,10 +47,9 @@
         </div>
         <div class="row">
             <div class="col-md-8">
-                <h2>Our Products</h2>
                 <div class="card-group custom-card-group">
                     {% for product in products %}
-                    <div class="col-md-2 custom-card">
+                    <div class="col-md-2 custom-card border-0">
                         <!-- Product Card Here -->
                         <a href="{% url 'pos:add_cart' product.id %}">
                             <div class="card mb-0">
@@ -65,7 +65,7 @@
                                     {% endif %}
                                     <p class="card-text mb-0">In Stock: {{ product.quantity }}</p>
                                     <p class="card-text">Ksh {{ product.price }}</p>
-                                    <!-- Add more fields as needed -->
+                                    
                                 </div>
                             </div>
                         </a>
@@ -104,10 +104,6 @@
                         <!-- Iterate over cart items -->
                         {% for item in cart %}
                         <div class="row mb-3">
-                            <!-- Product Image Column (4 cols) -->
-                            <!-- You can add the product image here if needed -->
-            
-                            <!-- Product Name and Quantity Column (6 cols) -->
                             <div class="col-md-8">
                                 <h5 class="card-title text-center">{{ item.product.title }}</h5>
                                 <p class="text-center">Products Remaining: {{ item.product.quantity }}</p>
@@ -131,26 +127,8 @@
                             </div>
                         </div>
                         {% endfor %}
-                        
-                       
-                        
-                        
                     </div>
                     <div class="card-footer text-center">
-                       
-                        <button type="button" class="btn btn-primary waves-effect waves-light">
-                            Total (Ksh  {{ total }})
-                        </button>
-                        {% if carts.add_vat %}
-                        <a href="{% url 'pos:toggle_vat' %}" class="btn btn-danger waves-effect waves-light">Remove VAT ({{vat}})</a>
-                        {% else %}
-                            <a href="{% url 'pos:toggle_vat' %}" class="btn btn-danger waves-effect waves-light">VAT ({{vat}})</a>
-                        {% endif %}
-                        <button type="button" class="btn btn-primary waves-effect waves-light">
-                            Payable (Ksh  {{ carts.total_payable }})
-                        </button>
-
-                       <br><br/>
                        <form method="post" action="{% url 'pos:update_discount' %}">
                         {% csrf_token %}
                         
@@ -163,17 +141,11 @@
                         
                         <div class="row text-center mb-3">
                             <div class="col-md-12">
-                                <button type="submit" class="btn btn-primary">Update Discount</button>
+                                <button type="submit" class="btn btn-primary">Validate Discount</button>
                             </div>
                         </div>
                     </form>
-                    
-                     
-                        
-                           
-                       
-
-
+  
                     </div>
                 </div>
                 <div class="card">
@@ -216,6 +188,30 @@
             </div>
             
         </div>
+        <!--payable amaount-->
+        <div class="row mt-4">
+            <div class="col-md-12 d-flex justify-content-between align-items-center">
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-primary waves-effect waves-light btn-block" title="Gross amount">
+                        Total (Ksh  {{ total }})
+                    </button>
+                </div>
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-primary waves-effect waves-light btn-block" title="Total amount to be paid">
+                        Payable (Ksh  {{ carts.total_payable }})
+                    </button>
+                </div>
+                <div class="col-md-4">
+                    {% if carts.add_vat %}
+                        <a href="{% url 'pos:toggle_vat' %}" class="btn btn-danger waves-effect waves-light btn-block">Remove VAT ({{vat}})</a>
+                    {% else %}
+                        <a href="{% url 'pos:toggle_vat' %}" class="btn btn-danger waves-effect waves-light btn-block" title="Click to add or Remove VAT(16%)">VAT ({{vat}})</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        
     </div>
 </div>
 

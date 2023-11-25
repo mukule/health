@@ -1,3 +1,9 @@
+from django.db.models import F
+from .models import Product, SaleItem
+from django.utils import timezone
+from django.shortcuts import render
+from django.db.models import Sum
+from datetime import datetime
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import *
 from .forms import *
@@ -9,20 +15,21 @@ from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.decorators import login_required
 
 
-
 def is_admin_or_superuser(user):
     return user.is_superuser or (user.access_level == 1)
 
+
 def is_superuser_admin_manager(user):
     return user.is_superuser or (user.access_level in [1, 2])
+
 
 def is_superuser_admin_cashier(user):
     return user.is_superuser or (user.access_level in [1, 3])
 
 
-
 def is_superuser_or_access_level_123(user):
     return user.is_superuser or (user.access_level in [1, 2, 3])
+
 
 @login_required
 @user_passes_test(is_superuser_or_access_level_123, login_url='users:not_authorized')
@@ -31,11 +38,13 @@ def create_category(request):
         form = CategoryForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Product Category created successfully, You May Add Another one.')
-            return redirect('product:create_category')  # Redirect to the category list view
+            messages.success(
+                request, 'Product Category created successfully, You May Add Another one.')
+            # Redirect to the category list view
+            return redirect('product:create_category')
     else:
         form = CategoryForm()
-    
+
     return render(request, 'product/create_category.html', {'form': form})
 
 
@@ -49,10 +58,11 @@ def edit_category(request, category_id):
         if form.is_valid():
             form.save()
             messages.success(request, 'Product Category updated successfully.')
-            return redirect('product:products')  # Redirect to the category list view
+            # Redirect to the category list view
+            return redirect('product:products')
     else:
         form = CategoryForm(instance=category)
-    
+
     return render(request, 'product/edit_category.html', {'form': form, 'category': category})
 
 
@@ -61,11 +71,10 @@ def edit_category(request, category_id):
 def delete_category(request, category_id):
     category = get_object_or_404(Category, pk=category_id)
 
-  
     category.delete()
     messages.success(request, 'Product Category deleted successfully.')
     return redirect('product:products')  # Redirect to the category list view
-    
+
 
 @login_required
 @user_passes_test(is_superuser_or_access_level_123, login_url='users:not_authorized')
@@ -74,13 +83,16 @@ def create_product(request):
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Product created successfully. You may add another one.')
-            return redirect('product:create_product')  # Redirect to the product creation view
+            messages.success(
+                request, 'Product created successfully. You may add another one.')
+            # Redirect to the product creation view
+            return redirect('product:create_product')
         else:
-            messages.error(request, 'Error creating the product. Please check the form and try again.')
+            messages.error(
+                request, 'Error creating the product. Please check the form and try again.')
     else:
         form = ProductForm()
-    
+
     return render(request, 'product/create_product.html', {'form': form})
 
 
@@ -94,14 +106,15 @@ def edit_product(request, product_id):
         if form.is_valid():
             form.save()
             messages.success(request, 'Product updated successfully.')
-            return redirect('product:products')  # Redirect to the product list view
+            # Redirect to the product list view
+            return redirect('product:products')
         else:
-            messages.error(request, 'Error updating the product. Please check the form and try again.')
+            messages.error(
+                request, 'Error updating the product. Please check the form and try again.')
     else:
         form = ProductForm(instance=product)
-    
-    return render(request, 'product/edit_product.html', {'form': form, 'product': product})
 
+    return render(request, 'product/edit_product.html', {'form': form, 'product': product})
 
 
 @login_required
@@ -109,11 +122,9 @@ def edit_product(request, product_id):
 def delete_product(request, product_id):
     product = get_object_or_404(Product, id=product_id)
 
-   
     product.delete()
     messages.success(request, 'Product deleted successfully.')
     return redirect('product:products')  # Redirect to the product list view
-  
 
 
 @login_required
@@ -152,7 +163,6 @@ def products(request):
     return render(request, 'product/products.html', {'products': products, 'categories': categories, 'selected_category': selected_category})
 
 
-
 @login_required
 @user_passes_test(is_superuser_admin_manager, login_url='users:not_authorized')
 def stock(request):
@@ -183,7 +193,8 @@ def stock(request):
 
     # Calculate the total amount for the stock
     total_stock_value = all_products.aggregate(
-        total_amount=Sum(ExpressionWrapper(F('quantity') * F('price'), output_field=DecimalField()))
+        total_amount=Sum(ExpressionWrapper(
+            F('quantity') * F('price'), output_field=DecimalField()))
     )['total_amount'] or 0
 
     return render(request, 'product/stock.html', {
@@ -193,7 +204,6 @@ def stock(request):
         'category_param': category_param,
         'product_name_param': product_name_param,
     })
-
 
 
 @login_required
@@ -208,7 +218,8 @@ def low_stock(request):
 @user_passes_test(is_superuser_or_access_level_123, login_url='users:not_authorized')
 def out_of_stock(request):
     out_of_stock_products = Product.objects.filter(quantity=0)
-    out_of_stock_count = out_of_stock_products.count()  # Count the out of stock products
+    # Count the out of stock products
+    out_of_stock_count = out_of_stock_products.count()
     return render(request, 'product/out_of_stock.html', {'products': out_of_stock_products, 'products_count': out_of_stock_count})
 
 
@@ -218,23 +229,25 @@ def create_stock_take(request):
     # Check for permissions or authentication if necessary
 
     # Create a new stock take with the current date
-    stock_take = StockTake.objects.create(stock_date=timezone.now(), user=request.user)
+    stock_take = StockTake.objects.create(
+        stock_date=timezone.now(), user=request.user)
 
     # Get all products
     products = Product.objects.all()
 
     total_stock_value = products.annotate(
-        total_value=ExpressionWrapper(F('quantity') * F('price'), output_field=DecimalField())
+        total_value=ExpressionWrapper(
+            F('quantity') * F('price'), output_field=DecimalField())
     ).aggregate(total_amount=Sum('total_value'))['total_amount'] or 0
 
     # Update the stock_value field in the StockTake model
     stock_take.stock_value = total_stock_value
     stock_take.save()
 
-
     # Create StockTakeItem instances for each product with quantity counted as 0
     for product in products:
-        StockTakeItem.objects.create(stock_take=stock_take, product=product, quantity_counted=0)
+        StockTakeItem.objects.create(
+            stock_take=stock_take, product=product, quantity_counted=0)
 
     # Redirect to a success page or another appropriate URL
     print(total_stock_value)
@@ -246,7 +259,7 @@ def create_stock_take(request):
 def stocks(request):
     # Retrieve all stock takes from the database
     stock_takes = StockTake.objects.all()
-    
+
     # Pass the stock takes to the template for rendering
     return render(request, 'product/stocks.html', {'stocks': stock_takes})
 
@@ -271,7 +284,7 @@ def stock_detail(request, stock_take_id):
 @user_passes_test(is_superuser_admin_manager, login_url='users:not_authorized')
 def update_stock_take(request, stock_take_id):
     stock_take = get_object_or_404(StockTake, pk=stock_take_id)
-    
+
     if request.method == 'POST':
         form = StockTakeItemForm(request.POST)
         if form.is_valid():
@@ -283,7 +296,6 @@ def update_stock_take(request, stock_take_id):
         form = StockTakeItemForm()
 
     return render(request, 'your_template.html', {'form': form, 'stock_take': stock_take})
-
 
 
 @login_required
@@ -302,7 +314,8 @@ def update_stock_take_item(request, stock_take_id, stock_take_item_id):
 
             # Recalculate the value based on the updated StockTakeItem instances
             updated_value = StockTakeItem.objects.filter(stock_take=stock_take).aggregate(
-                total_value=Sum(F('quantity_counted') * F('product__price'), output_field=DecimalField())
+                total_value=Sum(F('quantity_counted') *
+                                F('product__price'), output_field=DecimalField())
             )['total_value'] or 0
 
             # Update the value field in the StockTake model
@@ -336,15 +349,6 @@ def update_stock_take_item(request, stock_take_id, stock_take_item_id):
     return render(request, 'product/update_stock.html', context)
 
 
-from datetime import datetime
-from django.db.models import Sum
-from django.shortcuts import render
-from django.utils import timezone
-from .models import Product, SaleItem
-
-from django.db.models import F
-
-
 @login_required
 @user_passes_test(is_superuser_admin_manager, login_url='users:not_authorized')
 def stock_movement(request):
@@ -359,17 +363,22 @@ def stock_movement(request):
         try:
             # Convert start_date and end_date to datetime objects with time components
             start_date = datetime.strptime(start_date_param, '%Y-%m-%d')
-            end_date = datetime.strptime(end_date_param + ' 23:59:59', '%Y-%m-%d %H:%M:%S')
+            end_date = datetime.strptime(
+                end_date_param + ' 23:59:59', '%Y-%m-%d %H:%M:%S')
 
             # Convert the start and end dates to the timezone used in the Sale model
-            start_date = timezone.make_aware(start_date, timezone.get_current_timezone())
-            end_date = timezone.make_aware(end_date, timezone.get_current_timezone())
+            start_date = timezone.make_aware(
+                start_date, timezone.get_current_timezone())
+            end_date = timezone.make_aware(
+                end_date, timezone.get_current_timezone())
 
             # Filter sales items within the specified date range
-            sales_items = SaleItem.objects.filter(sale__sale_date__range=(start_date, end_date))
+            sales_items = SaleItem.objects.filter(
+                sale__sale_date__range=(start_date, end_date))
         except ValueError:
             # Handle invalid date format
-            messages.warning(request, 'Invalid date format. Please use YYYY-MM-DD format.')
+            messages.warning(
+                request, 'Invalid date format. Please use YYYY-MM-DD format.')
     else:
         # If no date range is provided, get all sales items
         sales_items = SaleItem.objects.all()
@@ -378,14 +387,15 @@ def stock_movement(request):
     product_sales = []
     for product in all_products:
         sales_for_product = sales_items.filter(product=product)
-        total_quantity_sold = sales_for_product.aggregate(total_quantity_sold=Sum('quantity_sold'))['total_quantity_sold'] or 0
+        total_quantity_sold = sales_for_product.aggregate(
+            total_quantity_sold=Sum('quantity_sold'))['total_quantity_sold'] or 0
         product_sales.append({
             'product': product,
             'total_quantity_sold': total_quantity_sold,
         })
 
-    product_sales = sorted(product_sales, key=lambda x: x['total_quantity_sold'], reverse=True)
-
+    product_sales = sorted(
+        product_sales, key=lambda x: x['total_quantity_sold'], reverse=True)
 
     # Pass the product_sales data and date range to the template
     context = {
@@ -412,9 +422,116 @@ def supplier_create(request):
         form = SupplierForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('product:suppliers')  # Redirect to the supplier list view after successful creation
+            # Redirect to the supplier list view after successful creation
+            return redirect('product:suppliers')
     else:
         form = SupplierForm()
-    
+
     context = {'form': form}
     return render(request, 'product/supplier_form.html', context)
+
+
+@login_required
+def receivings(request):
+    if request.method == 'POST':
+        form = ReceivingForm(request.POST)
+        if form.is_valid():
+            # Process the form data
+            supplier = form.cleaned_data['supplier']
+            product_ids = form.cleaned_data['products']
+            product_quantity = form.cleaned_data['product_quantity']
+            product_unit_price = form.cleaned_data['product_unit_price']
+
+            # Create Receiving instance with the logged-in user as the receiver
+            receiving = form.save(commit=False)
+            receiving.receiver = request.user  # Set the receiver to the logged-in user
+            receiving.save()
+
+            # Associate products with the receiving instance
+            for product_id in product_ids:
+                product = Product.objects.get(pk=product_id)
+                ReceivedProduct.objects.create(
+                    receiving=receiving,
+                    product=product,
+                    product_quantity=product_quantity,
+                    unit_price=product_unit_price
+                )
+
+                # Update or create a corresponding Supply instance
+                supply, created = Supply.objects.get_or_create(
+                    supplier=supplier,
+                    product=product,
+                    defaults={
+                        'price': product_unit_price,
+                        'total_amount': product_quantity * product_unit_price,
+                        'paid': False  # You can set this to True if payment is made during receiving
+                    }
+                )
+
+                supply.price = product_unit_price
+                supply.total_amount = product_quantity * product_unit_price
+                supply.paid = False
+                supply.save()
+
+            messages.success(
+                request, 'Products received successfully, add them to stock now by adjusting quantities for existing products or create new ones.')
+            return redirect('product:products')  # Redirect to a success page
+
+    else:
+        form = ReceivingForm()
+
+    return render(request, 'product/receiving.html', {'form': form})
+
+
+@login_required
+def dispatch(request):
+    if request.method == 'POST':
+        form = DispatchForm(request.POST)
+        if form.is_valid():
+            # Process the form data
+            product = form.cleaned_data['product']
+            destination = form.cleaned_data['destination']
+            reason = form.cleaned_data['reason']
+            product_quantity = form.cleaned_data['product_quantity']
+
+            # Retrieve the product instance from the database to get the latest available quantity
+            product = Product.objects.get(pk=product.pk)
+
+            # Check if there are enough products available for dispatch
+            if product_quantity > product.quantity:
+                messages.error(
+                    request, 'Not enough products available for dispatch.')
+                # Redirect to an error page or the same page
+                return redirect('product:dispatch')
+
+            # Create Dispatch instance
+            dispatch = Dispatch.objects.create(
+                destination=destination,
+                reason=reason,
+                dispatcher=request.user,
+                product=product,  # Assign the product to the Dispatch instance
+                product_quantity=product_quantity  # Assign the quantity to the Dispatch instance
+            )
+
+            # No need to explicitly reference the product field in DispatchedProduct
+            DispatchedProduct.objects.create(
+                dispatch=dispatch,
+                product_quantity=product_quantity
+            )
+
+            # Update the quantity field for the dispatched product
+            product.quantity -= product_quantity
+            product.save()
+
+            messages.success(request, 'Products dispatched successfully.')
+            return redirect('product:dispatches')  # Redirect to a success page
+
+    else:
+        form = DispatchForm()
+
+    return render(request, 'product/dispatch.html', {'form': form})
+
+
+def dispatches(request):
+    dispatches_list = Dispatch.objects.all()
+    return render(request, 'product/dispatches.html', {'dispatches_list': dispatches_list})

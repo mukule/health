@@ -1,5 +1,7 @@
+from .models import Supplier
 from django import forms
 from .models import *
+
 
 class CategoryForm(forms.ModelForm):
     class Meta:
@@ -15,12 +17,14 @@ class ProductForm(forms.ModelForm):
     units = forms.CharField(
         max_length=50,
         required=False,  # Set the field as not required
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Units e.g., 50gms'}),
+        widget=forms.TextInput(
+            attrs={'class': 'form-control', 'placeholder': 'Units e.g., 50gms'}),
     )
 
     class Meta:
         model = Product
-        fields = ['product_code', 'title', 'price', 'min_price', 'image', 'category', 'quantity', 'units', 'brand', 'expiry_date']
+        fields = ['product_code', 'title', 'price', 'min_price', 'image',
+                  'category', 'quantity', 'units', 'brand', 'expiry_date']
 
         widgets = {
             'product_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Product Code'}),
@@ -48,8 +52,6 @@ class ProductForm(forms.ModelForm):
         }
 
 
-
-
 class StockTakeItemForm(forms.ModelForm):
     class Meta:
         model = StockTakeItem
@@ -60,6 +62,7 @@ class StockTakeItemForm(forms.ModelForm):
         'quantity_counted': forms.NumberInput(attrs={'class': 'form-control'}),
     }
 
+
 class StockTakeItemUpdateForm(forms.ModelForm):
     class Meta:
         model = StockTakeItem
@@ -67,7 +70,9 @@ class StockTakeItemUpdateForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['quantity_counted'].widget.attrs.update({'class': 'form-control'})
+        self.fields['quantity_counted'].widget.attrs.update(
+            {'class': 'form-control'})
+
 
 class BuyerForm(forms.ModelForm):
     class Meta:
@@ -86,40 +91,43 @@ class BuyerForm(forms.ModelForm):
             'last_name': 'Last Name',
         }
 
-from django import forms
-from .models import Supplier
 
 class SupplierForm(forms.ModelForm):
     name = forms.CharField(
         max_length=100,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter name'}),
+        widget=forms.TextInput(
+            attrs={'class': 'form-control', 'placeholder': 'Enter name'}),
         label='Name'
     )
 
     contact_person = forms.CharField(
         max_length=100,
         required=False,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter contact person'}),
+        widget=forms.TextInput(
+            attrs={'class': 'form-control', 'placeholder': 'Enter contact person'}),
         label='Contact Person'
     )
 
     email = forms.EmailField(
         max_length=100,
         required=False,
-        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Enter email'}),
+        widget=forms.EmailInput(
+            attrs={'class': 'form-control', 'placeholder': 'Enter email'}),
         label='Email'
     )
 
     phone_number = forms.CharField(
         max_length=20,
         required=False,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter phone number'}),
+        widget=forms.TextInput(
+            attrs={'class': 'form-control', 'placeholder': 'Enter phone number'}),
         label='Phone Number'
     )
 
     address = forms.CharField(
         required=False,
-        widget=forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Enter address'}),
+        widget=forms.Textarea(
+            attrs={'class': 'form-control', 'placeholder': 'Enter address'}),
         label='Address'
     )
 
@@ -131,10 +139,86 @@ class SupplierForm(forms.ModelForm):
 
     class Meta:
         model = Supplier
-        fields = ['name', 'contact_person', 'email', 'phone_number', 'address', 'products_supplied']
+        fields = ['name', 'contact_person', 'email',
+                  'phone_number', 'address', 'products_supplied']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Make the email and phone_number fields not required
         self.fields['email'].required = False
         self.fields['phone_number'].required = False
+
+
+class ReceivingForm(forms.ModelForm):
+    supplier = forms.ModelChoiceField(
+        queryset=Supplier.objects.all(),
+        widget=forms.Select(
+            attrs={'class': 'form-control', 'id': 'supplier-select'}),
+        label='Supplier',
+        empty_label='Select Supplier'  # Add this line for the placeholder
+    )
+
+    products = forms.ChoiceField(
+        choices=[('', 'Select Product')] + [(product.id, str(product))
+                                            for product in Product.objects.all()],
+        widget=forms.Select(
+            attrs={'class': 'form-control', 'id': 'products-select'}),
+        label='Products'
+    )
+
+    product_quantity = forms.IntegerField(
+        widget=forms.NumberInput(
+            attrs={'class': 'form-control', 'placeholder': 'Enter quantity'}),
+        label='Product Quantity'
+    )
+
+    product_unit_price = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        widget=forms.NumberInput(
+            attrs={'class': 'form-control', 'placeholder': 'Enter unit price'}),
+        label='Product Unit Price'
+    )
+
+    class Meta:
+        model = Receiving
+        fields = ['supplier', 'products',
+                  'product_quantity', 'product_unit_price']
+
+    def __init__(self, *args, **kwargs):
+        super(ReceivingForm, self).__init__(*args, **kwargs)
+        self.fields['supplier'].widget.attrs['class'] = 'form-control'
+        self.fields['products'].widget.attrs['class'] = 'form-control'
+        self.fields['product_quantity'].widget.attrs['class'] = 'form-control'
+        self.fields['product_unit_price'].widget.attrs['class'] = 'form-control'
+
+
+class DispatchForm(forms.ModelForm):
+    class Meta:
+        model = Dispatch
+        fields = ['product', 'product_quantity', 'destination', 'reason']
+
+    product = forms.ModelChoiceField(
+        queryset=Product.objects.all(),
+        widget=forms.Select(
+            attrs={'class': 'form-control', 'id': 'supplier-select'}),
+        label='Product',
+        empty_label='Select Product'  # Add this line for the placeholder
+    )
+
+    product_quantity = forms.IntegerField(
+        widget=forms.NumberInput(
+            attrs={'class': 'form-control', 'placeholder': 'Enter quantity'}),
+        min_value=1,
+        label='Product Quantity'
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(DispatchForm, self).__init__(*args, **kwargs)
+
+        # Add a placeholder option for the product select field
+        self.fields['product'].widget.attrs['class'] = 'form-control'
+        self.fields['product'].widget.attrs['placeholder'] = 'Select Product'
+        self.fields['destination'].widget.attrs['class'] = 'form-control'
+        self.fields['reason'].widget.attrs['class'] = 'form-control'
+        self.fields['product_quantity'].widget.attrs['class'] = 'form-control'

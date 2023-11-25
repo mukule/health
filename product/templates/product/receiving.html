@@ -1,0 +1,66 @@
+{% extends 'main/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-8">
+                <div class="card shadow-lg p-3 mb-5 bg-white rounded">
+                    <div class="card-body">
+                        <h2 class="card-title text-center">Receive Products</h2>
+                        <form method="post">
+                            {% csrf_token %}
+
+                            <div class="form-group">
+                                {{ form.supplier.label_tag }}
+                                {{ form.supplier }}
+                                {% if form.supplier.errors %}
+                                    <div class="text-danger">
+                                        {{ form.supplier.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                {{ form.products.label_tag }}
+                                {{ form.products }}
+                                {% if form.products.errors %}
+                                    <div class="text-danger">
+                                        {{ form.products.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                {{ form.product_quantity.label_tag }}
+                                {{ form.product_quantity }}
+                                {% if form.product_quantity.errors %}
+                                    <div class="text-danger">
+                                        {{ form.product_quantity.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                {{ form.product_unit_price.label_tag }}
+                                {{ form.product_unit_price }}
+                                {% if form.product_unit_price.errors %}
+                                    <div class="text-danger">
+                                        {{ form.product_unit_price.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-block">Receive Products</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock content %}

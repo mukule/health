@@ -2,26 +2,34 @@ from django.urls import path
 from . import views
 
 
-
 app_name = 'product'
 urlpatterns = [
     path('create_product/', views.create_product, name='create_product'),
     path('create_category/', views.create_category, name='create_category'),
     path('products/', views.products, name='products'),
-    path('edit_category/<int:category_id>/', views.edit_category, name='edit_category'),
-    path('delete_category/<int:category_id>/', views.delete_category, name='delete_category'),
-    path('edit_product/<int:product_id>/', views.edit_product, name='edit_product'),
+    path('edit_category/<int:category_id>/',
+         views.edit_category, name='edit_category'),
+    path('delete_category/<int:category_id>/',
+         views.delete_category, name='delete_category'),
+    path('edit_product/<int:product_id>/',
+         views.edit_product, name='edit_product'),
     # Delete Product
-    path('delete_product/<int:product_id>/', views.delete_product, name='delete_product'),
+    path('delete_product/<int:product_id>/',
+         views.delete_product, name='delete_product'),
     path('stock/', views.stock, name='stock'),
     path('low_stock/', views.low_stock, name='low_stock'),
     path('out_of_stock/', views.out_of_stock, name='out_of_stock'),
     path('create_stock_take/', views.create_stock_take, name='create_stock_take'),
     path('stocks/', views.stocks, name='stocks'),
-    path('stock_detail/<int:stock_take_id>/', views.stock_detail, name='stock_detail'),
-    path('stock_take/<int:stock_take_id>/update/<int:stock_take_item_id>/', views.update_stock_take_item, name='update_stock'),
+    path('stock_detail/<int:stock_take_id>/',
+         views.stock_detail, name='stock_detail'),
+    path('stock_take/<int:stock_take_id>/update/<int:stock_take_item_id>/',
+         views.update_stock_take_item, name='update_stock'),
     path('stockmovement/', views.stock_movement, name='stock_movement'),
     path('suppliers/', views.suppliers, name='suppliers'),
     path('supplier_create/', views.supplier_create, name='supplier_create'),
+    path('receivings/', views.receivings, name='receivings'),
+    path('dispatches/', views.dispatches, name='dispatches'),
+    path('dispatch/', views.dispatch, name='dispatch'),
 
 ]

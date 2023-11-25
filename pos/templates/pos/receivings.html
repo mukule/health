@@ -1,0 +1,67 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-flex align-items-center justify-content-between">
+                    <h4 class="mb-0 font-size-18">Products Received</h4>
+                </div>
+            </div>
+        </div>  
+
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4">Receivings</h4>
+        
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Quantity</th>
+                                        <th>Unit Price</th>
+                                        <th>Total Price</th>
+                                        <th>Receiver</th>
+                                        <th>Received Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for receiving in receivings_list %}
+                                        {% for received_product in receiving.receivedproduct_set.all %}
+                                            <tr>
+                                                <td>{{ received_product.product.title }}</td>
+                                                <td>{{ received_product.product_quantity }}</td>
+                                                <td>Ksh {{ received_product.unit_price }}</td>
+                                                <td>Ksh {{ received_product.total_amount }}</td>
+                                                <td>{{ receiving.receiver.username }}</td>
+                                                <td>{{ receiving.received_date|date:"F d, Y H:i" }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="6">No products received</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{% url 'product:receivings' %}" class="btn btn-primary">Receive Products</a>
+                        </div>
+                    </div>
+                    <!-- end card-body-->
+                </div>
+                <!-- end card -->
+            </div>
+
+        </div>
+        
+    </div>
+</div>
+{% endblock content %}
