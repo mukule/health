@@ -20,7 +20,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
-
+from reportlab.lib.units import inch
 from .models import Product
 
 
@@ -590,7 +590,11 @@ def export_stock(request):
         # Left alignment for data cells
         ('LEFTPADDING', (0, 0), (-1, -1), 6),
         ('BACKGROUND', (0, 1), (-1, -1), '#ffffff'),
-        ('GRID', (0, 0), (-1, -1), 1, styles['Heading1'].textColor)
+        ('GRID', (0, 0), (-1, -1), 1, styles['Heading1'].textColor),
+        # Set specific column width and font size for the 'Title' column
+        ('COLWIDTH', (2, 0), (2, -1), 1.8 * inch),
+        ('FONTSIZE', (2, 0), (2, -1), 8),
+        ('LEADING', (2, 0), (2, -1), 10),
     ]))
 
     # Add the table to the elements
