@@ -587,9 +587,11 @@ def export_stock(request):
         ('BACKGROUND', (0, 0), (-1, 0), '#33B44B'),
         # White text color for header
         ('TEXTCOLOR', (0, 0), (-1, 0), '#ffffff'),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        # Left alignment for data cells
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
         ('BACKGROUND', (0, 1), (-1, -1), '#ffffff'),
         ('GRID', (0, 0), (-1, -1), 1, styles['Heading1'].textColor)
     ]))
