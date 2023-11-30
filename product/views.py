@@ -592,8 +592,8 @@ def export_stock(request):
         ('BACKGROUND', (0, 1), (-1, -1), '#ffffff'),
         ('GRID', (0, 0), (-1, -1), 1, styles['Heading1'].textColor),
         # Set specific column width and font size for the 'Title' column
-        ('COLWIDTH', (2, 0), (2, -1), 1.8 * inch),
-        ('FONTSIZE', (2, 0), (2, -1), 8),
+        ('COLWIDTH', (2, 0), (2, -1), 1.6 * inch),
+        ('FONTSIZE', (2, 0), (2, -1), 6),
         ('LEADING', (2, 0), (2, -1), 10),
     ]))
 
