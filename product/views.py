@@ -558,11 +558,8 @@ def export_stock(request):
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
     # Create a PDF document
-    pdf = SimpleDocTemplate(response, pagesize=letter)
-
-    # Set margins
-    left_margin = 50
-    top_margin = letter[1] - 50
+    pdf = SimpleDocTemplate(response, pagesize=letter,
+                            leftMargin=20, rightMargin=20)
 
     # Set up the elements for the PDF
     elements = []
