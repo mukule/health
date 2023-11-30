@@ -593,7 +593,7 @@ def export_stock(request):
         ('GRID', (0, 0), (-1, -1), 1, styles['Heading1'].textColor),
         # Set specific column width and font size for the 'Title' column
         ('COLWIDTH', (2, 0), (2, -1), 1.6 * inch),
-        ('FONTSIZE', (2, 0), (2, -1), 6),
+        ('FONTSIZE', (0, 0), (-1, -1), 7),  # Set font size for all cells to 7
         ('LEADING', (2, 0), (2, -1), 10),
     ]))
 
