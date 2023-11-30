@@ -31,5 +31,6 @@ urlpatterns = [
     path('receivings/', views.receivings, name='receivings'),
     path('dispatches/', views.dispatches, name='dispatches'),
     path('dispatch/', views.dispatch, name='dispatch'),
+    path('export_stock/', views.export_stock, name='export_stock'),
 
 ]

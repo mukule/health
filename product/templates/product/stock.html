@@ -37,11 +37,17 @@
                                         <input type="text" class="form-control" id="product_name" name="product_name" value="{{ request.GET.product_name }}">
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-2">
                                     <div class="form-group mt-4">
-                                        <button type="submit" class="btn btn-primary">Filter</button>
+                                        <button type="submit" class="btn btn-primary">Filter Products</button>
                                     </div>
                                 </div>
+                                <div class="col-md-2">
+                                    <div class="form-group mt-4">
+                                        <a href="{% url 'product:export_stock' %}" class="btn btn-primary">Export Products</a>
+                                    </div>
+                                </div>
+                                
                             </div>
                         </form>
                         

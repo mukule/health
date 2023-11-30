@@ -1,3 +1,6 @@
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from django.db.models import F
 from .models import Product, SaleItem
 from django.utils import timezone
@@ -13,6 +16,12 @@ from django.db.models import *
 from users.models import *
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from django.http import HttpResponse
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+
+from .models import Product
 
 
 def is_admin_or_superuser(user):
@@ -535,3 +544,61 @@ def dispatch(request):
 def dispatches(request):
     dispatches_list = Dispatch.objects.all()
     return render(request, 'product/dispatches.html', {'dispatches_list': dispatches_list})
+
+
+def export_stock(request):
+    # Retrieve all products from the database
+    products = Product.objects.all()
+
+    # Create a response object with PDF content type
+    response = HttpResponse(content_type='application/pdf')
+
+    # Generate filename with the current date
+    filename = f"products_{datetime.now().strftime('%Y%m%d')}.pdf"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    # Create a PDF document
+    pdf = SimpleDocTemplate(response, pagesize=letter)
+
+    # Set margins
+    left_margin = 50
+    top_margin = letter[1] - 50
+
+    # Set up the elements for the PDF
+    elements = []
+
+    # Title
+    title = "Health Today Products"
+    styles = getSampleStyleSheet()
+    elements.append(Paragraph(title, styles['Title']))
+
+    # Table data
+    data = [["Product ID", "Product Code", "Title",
+             "Brand", "Units", "Price", "Quantity"]]
+
+    for product in products:
+        data.append([str(product.id), str(product.product_code), product.title, product.brand,
+                     str(product.units), str(product.price), str(product.quantity)])
+
+    # Create the table
+    table = Table(data, repeatRows=1, hAlign="LEFT")
+    table.setStyle(TableStyle([
+        # Green background for header
+        ('BACKGROUND', (0, 0), (-1, 0), '#33B44B'),
+        # White text color for header
+        ('TEXTCOLOR', (0, 0), (-1, 0), '#ffffff'),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), '#ffffff'),
+        ('GRID', (0, 0), (-1, -1), 1, styles['Heading1'].textColor)
+    ]))
+
+    # Add the table to the elements
+    elements.append(table)
+
+    # Build the PDF document with page breaks
+    pdf.build(elements, onFirstPage=lambda canvas, doc: None,
+              onLaterPages=lambda canvas, doc: canvas.drawString(10, 10, "Continued..."))
+
+    return response
