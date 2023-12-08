@@ -605,3 +605,41 @@ def export_stock(request):
               onLaterPages=lambda canvas, doc: canvas.drawString(10, 10, "Continued..."))
 
     return response
+
+
+def product_promotion(request):
+    product_filter = request.GET.get('product_filter')
+    title_filter = request.GET.get('title_filter')
+
+    # Ensure that the filters are not None before using them in the query
+    product_filter_query = Q(product_code__icontains=product_filter) if product_filter else Q()
+    title_filter_query = Q(title__icontains=title_filter) if title_filter else Q()
+
+    products = Product.objects.filter(product_filter_query | title_filter_query)
+
+    context = {
+        'products': products,
+    }
+
+    return render(request, 'product/p_promotion.html', context)
+
+def promotion(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+
+    if request.method == 'POST':
+        form = PromotionForm(request.POST)
+        if form.is_valid():
+            promotion = form.save(commit=False)
+            promotion.product = product
+            promotion.save()
+            messages.success(request, 'Promotion created successfully.')
+            return redirect('success_url_name')  # Change this to your success URL
+    else:
+        form = PromotionForm(initial={'product': product})
+
+    context = {
+        'form': form,
+        'product': product
+        }
+
+    return render(request, 'product/promotion.html', context)

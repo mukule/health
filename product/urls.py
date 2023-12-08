@@ -32,5 +32,9 @@ urlpatterns = [
     path('dispatches/', views.dispatches, name='dispatches'),
     path('dispatch/', views.dispatch, name='dispatch'),
     path('export_stock/', views.export_stock, name='export_stock'),
+    path('p_promotion/', views.product_promotion, name='p_promotion'),
+    path('p_promotion/<int:product_id>/', views.promotion, name='promotion'),
+
+
 
 ]

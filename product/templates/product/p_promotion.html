@@ -1,0 +1,87 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-flex align-items-center justify-content-between">
+                    <h4 class="mb-0 font-size-18"></h4>
+                </div>
+            </div>
+        </div>  
+        
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4 text-center">select a Product to add on promotion</h4>
+                       
+
+                        <form method="GET" action="{% url 'product:p_promotion' %}">
+                           <div class="form-row">
+                           <div class="col-md-5">
+                            <div class="form-group">
+                               
+                                <input type="text" class="form-control" id="product_filter" name="product_filter" placeholder="Enter product code" value="{{ request.GET.product_filter }}">
+                            </div>
+                           </div>
+                           <div class="col-md-5">
+                            <div class="form-group">
+                               
+                                <input type="text" class="form-control" id="title_filter" name="title_filter" placeholder="Enter Name of Product" value="{{ request.GET.title_filter }}">
+                            </div>
+                           </div>
+                           <div class="col-md-2">
+                          <div class="form-group">
+                            <button type="submit" class="btn btn-primary">Search Products </button>
+                          </div>
+                           </div>
+                           </div>
+                        </form>
+                        
+                        <div class="table-responsive">
+                            <table class="table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>PRODUCT</th>
+                                        <th>CATEGORY</th>
+                                        <th>PRICE</th>
+                                        <th>CREATED AT</th>
+                                        <th>LAST UPDATED</th>
+                                        <th>QUANTITY</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for product in products %}
+                                    <tr>
+                                        <td>{{ product.id }}</td>
+                                        <td><a href="{% url 'product:promotion' product.id %}">{{ product.title }}</a></td>
+                                        <td>{{ product.category }}</td>
+                                        <td>{{ product.price }}</td>
+                                        <td>{{ product.created_at }}</td>
+                                        <td>{{ product.updated_at }}</td>
+                                        <td>{{ product.quantity }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                      
+
+                    </div>
+                    <!-- end card-body-->
+                </div>
+                <!-- end card -->
+
+            </div>
+            <!-- end col -->
+        </div>
+        
+    </div>
+</div>
+{% endblock content %}
+

@@ -222,3 +222,56 @@ class DispatchForm(forms.ModelForm):
         self.fields['destination'].widget.attrs['class'] = 'form-control'
         self.fields['reason'].widget.attrs['class'] = 'form-control'
         self.fields['product_quantity'].widget.attrs['class'] = 'form-control'
+
+
+class PromotionForm(forms.ModelForm):
+    initial_price = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        widget=forms.NumberInput(
+            attrs={'class': 'form-control', 'placeholder': 'Enter initial price'}),
+        label='Initial Price'
+    )
+    current_price = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        widget=forms.NumberInput(
+            attrs={'class': 'form-control', 'placeholder': 'Enter Current price'}),
+        label='Current Price'
+    )
+
+    start_date = forms.DateField(
+        widget=forms.DateInput(
+            attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD'}),
+        label='Start Date'
+    )
+
+    end_date = forms.DateField(
+        widget=forms.DateInput(
+            attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD'}),
+        label='End Date'
+    )
+
+    product = forms.ModelChoiceField(
+        queryset=Product.objects.all(),
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label='Product'
+    )
+
+    class Meta:
+        model = Promotion
+        fields = ['initial_price', 'start_date', 'end_date', 'product']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Customize widgets, labels, or any other field attributes if needed
+
+    def clean(self):
+        cleaned_data = super().clean()
+        start_date = cleaned_data.get('start_date')
+        end_date = cleaned_data.get('end_date')
+
+        # Add custom validation if needed, e.g., ensuring the end date is after the start date
+        if start_date and end_date and start_date >= end_date:
+            raise forms.ValidationError("End date must be after the start date.")
