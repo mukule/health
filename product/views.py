@@ -1,3 +1,5 @@
+from .models import Promotion
+from .forms import PromotionForm
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
@@ -612,16 +614,20 @@ def product_promotion(request):
     title_filter = request.GET.get('title_filter')
 
     # Ensure that the filters are not None before using them in the query
-    product_filter_query = Q(product_code__icontains=product_filter) if product_filter else Q()
-    title_filter_query = Q(title__icontains=title_filter) if title_filter else Q()
+    product_filter_query = Q(
+        product_code__icontains=product_filter) if product_filter else Q()
+    title_filter_query = Q(
+        title__icontains=title_filter) if title_filter else Q()
 
-    products = Product.objects.filter(product_filter_query | title_filter_query)
+    products = Product.objects.filter(
+        product_filter_query | title_filter_query)
 
     context = {
         'products': products,
     }
 
     return render(request, 'product/p_promotion.html', context)
+
 
 def promotion(request, product_id):
     product = get_object_or_404(Product, id=product_id)
@@ -631,15 +637,134 @@ def promotion(request, product_id):
         if form.is_valid():
             promotion = form.save(commit=False)
             promotion.product = product
+
+            print(promotion)
+
+            # Check if start date is in the past
+            if promotion.start_date < timezone.now().date():
+                messages.error(
+                    request, 'Please check the start date of this promotion. It should not be a date before today.')
+                return render(request, 'product/promotion.html', {'form': form, 'product': product})
+
+            # Check for overlapping promotions
+            overlapping_promotions = Promotion.objects.filter(
+                product=product,
+                start_date__lte=promotion.end_date,
+                end_date__gte=promotion.start_date
+            ).exclude(id=promotion.id)
+
+            if overlapping_promotions.exists():
+                messages.error(
+                    request, 'This promotion overlaps with an existing promotion. Please choose different dates.')
+                return render(request, 'product/promotion.html', {'form': form, 'product': product})
+
+           # Calculate discount percentage
+            if promotion.initial_price != 0:
+                if promotion.current_price is None:
+                    # If current_price is not provided, use the product price
+                    promotion.current_price = product.price
+
+                discount_amount = promotion.initial_price - promotion.current_price
+                promotion.discount_percentage = round(
+                    (discount_amount / promotion.initial_price) * 100)
+            else:
+                # If initial_price is zero, set discount_percentage to None
+                promotion.discount_percentage = None
+
             promotion.save()
-            messages.success(request, 'Promotion created successfully.')
-            return redirect('success_url_name')  # Change this to your success URL
+
+            # Update product price only if current_price is provided
+            if promotion.current_price is not None:
+                product.price = promotion.current_price
+                product.save()
+            else:
+                # If current_price is not provided, update with the product price
+                promotion.current_price = product.price
+                promotion.save()
+
+            return redirect('product:promotions')
     else:
-        form = PromotionForm(initial={'product': product})
+        # Set the initial value of current_price to the product price
+        initial_current_price = product.price
+        form = PromotionForm(
+            initial={'product': product, 'current_price': initial_current_price})
 
     context = {
         'form': form,
         'product': product
-        }
+    }
 
     return render(request, 'product/promotion.html', context)
+
+
+def edit_promotion(request, promotion_id):
+    promotion = get_object_or_404(Promotion, id=promotion_id)
+    product = promotion.product
+
+    if request.method == 'POST':
+        form = PromotionForm(request.POST, instance=promotion)
+        if form.is_valid():
+            # Save the form to update promotion details
+            promotion = form.save(commit=False)
+            # Ensure the correct product is associated with the promotion
+            promotion.product = product
+            print("After assignment: promotion.product =",
+                  promotion.current_price)
+
+            # Check if the start date is in the past
+            if promotion.start_date < timezone.now().date():
+                messages.error(
+                    request, 'Please check the start date of this promotion. It should not be a date before today.')
+                return render(request, 'product/promotion.html', {'form': form, 'product': product})
+
+            # Check for overlapping promotions
+            overlapping_promotions = Promotion.objects.filter(
+                product=product,
+                start_date__lte=promotion.end_date,
+                end_date__gte=promotion.start_date
+            ).exclude(id=promotion.id)
+
+            if overlapping_promotions.exists():
+                messages.error(
+                    request, 'This promotion overlaps with an existing promotion. Please choose different dates.')
+                return render(request, 'product/promotion.html', {'form': form, 'product': product})
+
+            # Update product price with the new price from the promotion before calculating the discount
+            product.price = promotion.current_price
+            product.save()
+
+            # Calculate discount percentage
+            if promotion.initial_price != 0:
+                discount_amount = promotion.initial_price - promotion.current_price
+                promotion.discount_percentage = round(
+                    (discount_amount / promotion.initial_price) * 100)
+            else:
+                # If initial_price is zero, set discount_percentage to None
+                promotion.discount_percentage = None
+
+            # Save the promotion after updating details
+            promotion.save()
+
+            return redirect('product:promotions')
+    else:
+        form = PromotionForm(instance=promotion)
+
+    context = {
+        'form': form,
+        'promo': promotion
+    }
+
+    return render(request, 'product/edit_promotion.html', context)
+
+
+def promotions(request):
+    promo = Promotion.objects.all()
+    return render(request, 'product/promotions.html', {'promo': promo})
+
+
+def delete_promotion(request, promotion_id):
+    # Get the promotion object or return a 404 response if not found
+    promotion = get_object_or_404(Promotion, id=promotion_id)
+
+    promotion.delete()
+    return redirect('product:promotions')

@@ -242,13 +242,13 @@ class PromotionForm(forms.ModelForm):
 
     start_date = forms.DateField(
         widget=forms.DateInput(
-            attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD'}),
+            attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD', 'type': 'date'}),
         label='Start Date'
     )
 
     end_date = forms.DateField(
         widget=forms.DateInput(
-            attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD'}),
+            attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD', 'type': 'date'}),
         label='End Date'
     )
 
@@ -260,7 +260,8 @@ class PromotionForm(forms.ModelForm):
 
     class Meta:
         model = Promotion
-        fields = ['initial_price', 'start_date', 'end_date', 'product']
+        fields = ['initial_price', 'current_price',
+                  'start_date', 'end_date', 'product']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -274,4 +275,5 @@ class PromotionForm(forms.ModelForm):
 
         # Add custom validation if needed, e.g., ensuring the end date is after the start date
         if start_date and end_date and start_date >= end_date:
-            raise forms.ValidationError("End date must be after the start date.")
+            raise forms.ValidationError(
+                "End date must be after the start date.")

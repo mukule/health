@@ -34,6 +34,11 @@ urlpatterns = [
     path('export_stock/', views.export_stock, name='export_stock'),
     path('p_promotion/', views.product_promotion, name='p_promotion'),
     path('p_promotion/<int:product_id>/', views.promotion, name='promotion'),
+    path('promotions/', views.promotions, name='promotions'),
+    path('edit_promotion/<int:promotion_id>/',
+         views.edit_promotion, name='edit_promotion'),
+    path('delete_promotion/<int:promotion_id>/',
+         views.delete_promotion, name='delete_promotion'),
 
 
 

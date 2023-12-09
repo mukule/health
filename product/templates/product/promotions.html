@@ -1,0 +1,60 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-9">
+           
+                <div class="row">
+                    {% for p in promo %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card position-relative">
+                            <!-- Discount Badge -->
+                            {% if p.discount_percentage %}
+                            <span class="badge badge-danger position-absolute top-0 end-0">{{ p.discount_percentage }}% OFF</span>
+                            {% endif %}
+
+                            <img src="{{ p.product.image.url }}" class="card-img-top" alt="{{ p.product.name }}" style="height: 168px; object-fit: cover;">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ p.product.title }}</h5>
+                                {% if p.product.brand %}
+                                <p class="card-text">Brand: {{ p.product.brand }}</p>
+                                {% endif %}
+                                
+                                {% if p.product.units %}
+                                <p class="card-text">Units: {{ p.product.units }}</p>
+                                {% endif %}
+                                {%if p.initial_price%}
+                                <p class="card-text">Before: Ksh <del>{{ p.initial_price }}</del></p>
+                                {%endif%}
+                                <p class="card-text">Now: Ksh {{ p.product.price }}</p>
+                                <p class="card-text">Remaining: {{ p.product.quantity }}</p>
+                                <i><p class="card-text">Duration: {{ p.start_date }} - {{p.end_date}}</p></i>
+                              
+                                <a href="{% url 'product:edit_promotion' p.id %}" class="btn btn-primary">Edit</a>
+
+                               
+                                <a href="{% url 'product:delete_promotion' p.id %}" class="btn btn-danger">Delete</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% if forloop.counter|divisibleby:3 and not forloop.last %}
+                        </div><div class="row">
+                    {% endif %}
+                {% empty %}
+                    <div class="col-12 text-center">
+                        <p>No Products available</p>
+                    </div>
+                {% endfor %}
+                
+                </div>
+                <div class="col-12 text-center">
+                    <a href="{% url 'product:p_promotion' %}" class="btn btn-primary">Create New Promotion</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
