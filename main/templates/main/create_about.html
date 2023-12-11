@@ -1,0 +1,35 @@
+{% extends 'main/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+    <div class="page-content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box d-flex align-items-center justify-content-between">
+                        <h3 class="mb-0 font-size-18">Dashboard >> Create About</h3>
+                    </div>
+                </div>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" class="mx-auto text-center">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="col-md-6 mx-auto">
+                        {{ form.title|as_crispy_field }}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col-md-6 mx-auto">
+                        {{ form.description|as_crispy_field }}
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock content %}

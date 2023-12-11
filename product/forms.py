@@ -277,3 +277,14 @@ class PromotionForm(forms.ModelForm):
         if start_date and end_date and start_date >= end_date:
             raise forms.ValidationError(
                 "End date must be after the start date.")
+
+
+class AboutForm(forms.ModelForm):
+    description = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control'}))
+    title = forms.CharField(widget=forms.TextInput(
+        attrs={'class': 'form-control'}))
+
+    class Meta:
+        model = About
+        fields = ['title', 'description']

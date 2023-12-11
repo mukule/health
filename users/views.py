@@ -24,10 +24,9 @@ from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.decorators import login_required
 
 
-
-
 def is_admin_or_superuser(user):
     return user.is_superuser or (user.access_level == 1)
+
 
 def not_authorized(request):
     return render(
@@ -60,6 +59,7 @@ def register(request):
         context={"form": form}
     )
 
+
 def activateEmail(request, user, to_email):
     mail_subject = 'Activate your user account.'
     message = render_to_string('users/template_activate_account.html', {
@@ -74,26 +74,30 @@ def activateEmail(request, user, to_email):
         messages.success(request, f'Dear <b>{user}</b>, please go to you email <b>{to_email}</b> inbox and click on \
             received activation link to confirm and complete the registration. <b>Note:</b> Check your spam folder.')
     else:
-        messages.error(request, f'Problem sending confirmation email to {to_email}, check if you typed it correctly.')
+        messages.error(
+            request, f'Problem sending confirmation email to {to_email}, check if you typed it correctly.')
+
 
 def activate(request, uidb64, token):
     User = get_user_model()
     try:
         uid = force_str(urlsafe_base64_decode(uidb64))
         user = User.objects.get(pk=uid)
-    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
         user = None
 
     if user is not None and account_activation_token.check_token(user, token):
         user.is_active = True
         user.save()
 
-        messages.success(request, 'Thank you for your email confirmation. Now you can login your account.')
+        messages.success(
+            request, 'Thank you for your email confirmation. Now you can login your account.')
         return redirect('users:login')
     else:
         messages.error(request, 'Activation link is invalid!')
-    
+
     return redirect('/')
+
 
 def generate_random_password(length=10):
     characters = string.ascii_letters + string.digits + string.punctuation
@@ -112,12 +116,13 @@ def custom_login(request):
             )
             if user is not None:
                 login(request, user)
-                messages.success(request, f"Hello <b>{user.username}</b>! You have been logged in")
+                messages.success(
+                    request, f"Hello <b>{user.username}</b>! You have been logged in")
                 return redirect("/")
 
         else:
             for error in list(form.errors.values()):
-                messages.error(request, error) 
+                messages.error(request, error)
 
     form = UserLoginForm()
 
@@ -125,7 +130,8 @@ def custom_login(request):
         request=request,
         template_name="users/login.html",
         context={"form": form}
-        )
+    )
+
 
 def profile(request, username):
     if request.method == 'POST':
@@ -137,7 +143,8 @@ def profile(request, username):
             user_form = form.save()
             print("User form saved:", user_form)
 
-            messages.success(request, f'{user_form}, Your profile has been updated!')
+            messages.success(
+                request, f'{user_form}, Your profile has been updated!')
             return redirect('users:profile', user_form.username)
 
         for error in list(form.errors.values()):
@@ -150,7 +157,6 @@ def profile(request, username):
         return render(request, 'users/profile.html', context={'form': form})
 
     return redirect("/")
-
 
 
 @login_required
@@ -169,6 +175,7 @@ def password_change(request):
     form = SetPasswordForm(user)
     return render(request, 'users/password_reset_confirm.html', {'form': form})
 
+
 @user_not_authenticated
 def password_reset_request(request):
     if request.method == 'POST':
@@ -185,10 +192,11 @@ def password_reset_request(request):
                     'token': account_activation_token.make_token(associated_user),
                     "protocol": 'https' if request.is_secure() else 'http'
                 })
-                email = EmailMessage(subject, message, to=[associated_user.email])
+                email = EmailMessage(subject, message, to=[
+                                     associated_user.email])
                 if email.send():
                     messages.success(request,
-                        """
+                                     """
                         <h2>Password reset sent</h2><hr>
                         <p>
                             We've emailed you instructions for setting your password, if an account exists with the email you entered. 
@@ -196,19 +204,20 @@ def password_reset_request(request):
                             you registered with, and check your spam folder.
                         </p>
                         """
-                    )
+                                     )
                 else:
-                    messages.error(request, "Problem sending reset password email, <b>SERVER PROBLEM</b>")
+                    messages.error(
+                        request, "Problem sending reset password email, <b>SERVER PROBLEM</b>")
 
             return redirect('/')
 
-
     form = PasswordResetForm()
     return render(
-        request=request, 
-        template_name="users/password_reset.html", 
+        request=request,
+        template_name="users/password_reset.html",
         context={"form": form}
-        )
+    )
+
 
 def passwordResetConfirm(request, uidb64, token):
     User = get_user_model()
@@ -223,7 +232,8 @@ def passwordResetConfirm(request, uidb64, token):
             form = SetPasswordForm(user, request.POST)
             if form.is_valid():
                 form.save()
-                messages.success(request, "Your password has been set. You may go ahead and <b>log in </b> now.")
+                messages.success(
+                    request, "Your password has been set. You may go ahead and <b>log in </b> now.")
                 return redirect('/')
             else:
                 for error in list(form.errors.values()):
@@ -234,15 +244,16 @@ def passwordResetConfirm(request, uidb64, token):
     else:
         messages.error(request, "Link is expired")
 
-    messages.error(request, 'Something went wrong, redirecting back to Homepage')
+    messages.error(
+        request, 'Something went wrong, redirecting back to Homepage')
     return redirect("/")
+
 
 @login_required
 def custom_logout(request):
     logout(request)
     messages.info(request, "Logged out successfully!")
     return redirect("/")
-
 
 
 @login_required
@@ -252,11 +263,14 @@ def staffs(request):
     return render(request, 'users/staffs.html', {'staffs': staffs})
 
 
-
 @login_required
 @user_passes_test(is_admin_or_superuser, login_url='users:not_authorized')
 def delete_user(request, user_id):
     user = get_object_or_404(CustomUser, id=user_id)
-    
+
     user.delete()
-    return redirect('users:staffs')  # Redirect to a relevant page after deletion.
+    return redirect('users:staffs')
+
+
+def not_allowed(request):
+    return redirect(request, 'users/not_allowed.html')

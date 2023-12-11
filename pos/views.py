@@ -905,3 +905,8 @@ def receivings(request):
 def supplies(request):
     supplies_list = Supply.objects.all()
     return render(request, 'pos/supplies.html', {'supplies_list': supplies_list})
+
+
+def about(request):
+    about = About.objects.all()
+    return render(request, 'pos/about.html', {'about': about})

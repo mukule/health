@@ -7,9 +7,7 @@
         <div class="row">
             <div class="col-12">
                 <div class="page-title-box d-flex align-items-center justify-content-between">
-                    <h4 class="mb-0 font-size-18"> Stock take ID :{{stock.id}} taken on {{stock.stock_date}}</h4>
-
-                    
+                    <h4 class="mb-0 font-size-18"> Stock take ID: {{stock.id}} taken on {{stock.stock_date}}</h4>
                 </div>
             </div>
         </div>  
@@ -20,8 +18,24 @@
                     <div class="card-body">
                         <h4 class="card-title mb-4"> All products to be updated</h4>
                         
+                        <div class="mb-3">
+                            <div class="row text-center">
+                                <div class="col-md-6">
+                                    <div class="form-row">
+                                        <div class="col-md-6">
+                                            <label for="searchInput" class="form-label">Search by Product Title:</label>
+                                   
+                                        </div>
+                                        <div class="col-md-6">
+                                            <input type="text" class="form-control" id="searchInput" placeholder="Enter product title">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="table-responsive">
-                            <table class="table mb-0">
+                            <table class="table mb-0" id="stockTable">
                                 <thead>
                                     <tr>
                                         <th>ID</th>
@@ -40,29 +54,43 @@
                                         <td>{{ stock_take_item.product.category }}</td>
                                         <td>{{ stock_take_item.product.price }}</td>
                                         <td>{{ stock_take_item.quantity_counted }}</td>
-                                        <td><a href="{% url 'product:update_stock' stock.id stock_take_item.id %}">Update stock</a></td>
+                                        <td><a href="{% url 'product:update_stock' stock.id stock_take_item.id %}">Update product Counts</a></td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
-                            
                         </div>
-
                     </div>
                     <!-- end card-body-->
                 </div>
                 <!-- end card -->
-
             </div>
             <!-- end col -->
-
-
-           
-            <!-- end col -->
         </div>
-        
     </div>
 </div>
+
+<script>
+    // JavaScript to handle the search functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const stockTable = document.getElementById('stockTable').querySelector('tbody');
+
+        searchInput.addEventListener('input', function() {
+            const searchValue = searchInput.value.toLowerCase();
+
+            // Loop through rows in the table and hide/show based on search value
+            stockTable.querySelectorAll('tr').forEach(function(row) {
+                const productTitle = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+
+                if (productTitle.includes(searchValue)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+
 {% endblock content %}
-
-

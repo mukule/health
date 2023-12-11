@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-import os 
+import os
 
 from pathlib import Path
 
@@ -89,7 +89,7 @@ DATABASES = {
         'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '3306',
-        
+
     }
 }
 
@@ -145,3 +145,7 @@ LOGIN_REDIRECT_URL = 'profile'
 AUTHENTICATION_BACKENDS = ['users.backends.EmailBackend']
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+
+SESSION_COOKIE_AGE = 1800  # 30 minutes
+SESSION_SAVE_EVERY_REQUEST = True

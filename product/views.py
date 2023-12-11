@@ -24,6 +24,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from .models import Product
+from users.decorators import *
 
 
 def is_admin_or_superuser(user):
@@ -43,7 +44,7 @@ def is_superuser_or_access_level_123(user):
 
 
 @login_required
-@user_passes_test(is_superuser_or_access_level_123, login_url='users:not_authorized')
+@second
 def create_category(request):
     if request.method == 'POST':
         form = CategoryForm(request.POST)
@@ -60,7 +61,7 @@ def create_category(request):
 
 
 @login_required
-@user_passes_test(is_superuser_or_access_level_123, login_url='users:not_authorized')
+@second
 def edit_category(request, category_id):
     category = get_object_or_404(Category, pk=category_id)
 
@@ -78,7 +79,7 @@ def edit_category(request, category_id):
 
 
 @login_required
-@user_passes_test(is_superuser_or_access_level_123, login_url='users:not_authorized')
+@second
 def delete_category(request, category_id):
     category = get_object_or_404(Category, pk=category_id)
 
@@ -88,7 +89,7 @@ def delete_category(request, category_id):
 
 
 @login_required
-@user_passes_test(is_superuser_or_access_level_123, login_url='users:not_authorized')
+@second
 def create_product(request):
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES)
@@ -108,7 +109,7 @@ def create_product(request):
 
 
 @login_required
-@user_passes_test(is_superuser_or_access_level_123, login_url='users:not_authorized')
+@second
 def edit_product(request, product_id):
     product = get_object_or_404(Product, id=product_id)
 
@@ -129,7 +130,7 @@ def edit_product(request, product_id):
 
 
 @login_required
-@user_passes_test(is_superuser_or_access_level_123, login_url='users:not_authorized')
+@second
 def delete_product(request, product_id):
     product = get_object_or_404(Product, id=product_id)
 
@@ -139,7 +140,7 @@ def delete_product(request, product_id):
 
 
 @login_required
-@user_passes_test(is_superuser_or_access_level_123, login_url='users:not_authorized')
+@second
 def products(request):
     categories = Category.objects.all()  # Query all categories from the database
     selected_category = None
@@ -175,7 +176,7 @@ def products(request):
 
 
 @login_required
-@user_passes_test(is_superuser_admin_manager, login_url='users:not_authorized')
+@second
 def stock(request):
     # Retrieve all products
     all_products = Product.objects.all()
@@ -218,7 +219,7 @@ def stock(request):
 
 
 @login_required
-@user_passes_test(is_superuser_or_access_level_123, login_url='users:not_authorized')
+@third
 def low_stock(request):
     low_stock_products = Product.objects.filter(quantity__lte=5)
     low_stock_count = low_stock_products.count()  # Count the low stock products
@@ -226,7 +227,7 @@ def low_stock(request):
 
 
 @login_required
-@user_passes_test(is_superuser_or_access_level_123, login_url='users:not_authorized')
+@third
 def out_of_stock(request):
     out_of_stock_products = Product.objects.filter(quantity=0)
     # Count the out of stock products
@@ -235,7 +236,7 @@ def out_of_stock(request):
 
 
 @login_required
-@user_passes_test(is_superuser_admin_manager, login_url='users:not_authorized')
+@third
 def create_stock_take(request):
     # Check for permissions or authentication if necessary
 
@@ -266,7 +267,7 @@ def create_stock_take(request):
 
 
 @login_required
-@user_passes_test(is_superuser_admin_manager, login_url='users:not_authorized')
+@third
 def stocks(request):
     # Retrieve all stock takes from the database
     stock_takes = StockTake.objects.all()
@@ -276,9 +277,8 @@ def stocks(request):
 
 
 @login_required
-@user_passes_test(is_superuser_admin_manager, login_url='users:not_authorized')
+@third
 def stock_detail(request, stock_take_id):
-    # Retrieve the specific stock take based on the stock_take_id or show a 404 page if not found
     stock_take = get_object_or_404(StockTake, pk=stock_take_id)
 
     # Retrieve all products associated with this stock take
@@ -292,7 +292,7 @@ def stock_detail(request, stock_take_id):
 
 
 @login_required
-@user_passes_test(is_superuser_admin_manager, login_url='users:not_authorized')
+@third
 def update_stock_take(request, stock_take_id):
     stock_take = get_object_or_404(StockTake, pk=stock_take_id)
 
@@ -310,7 +310,7 @@ def update_stock_take(request, stock_take_id):
 
 
 @login_required
-@user_passes_test(is_superuser_admin_manager, login_url='users:not_authorized')
+@third
 def update_stock_take_item(request, stock_take_id, stock_take_item_id):
     # Retrieve the specific StockTake and StockTakeItem instances
     stock_take = get_object_or_404(StockTake, pk=stock_take_id)
@@ -768,3 +768,16 @@ def delete_promotion(request, promotion_id):
 
     promotion.delete()
     return redirect('product:promotions')
+
+
+def stock_update(request, stocktake_id):
+    stocktake = get_object_or_404(StockTake, pk=stocktake_id)
+    stocktake_items = StockTakeItem.objects.filter(stock_take=stocktake)
+
+    for item in stocktake_items:
+        # Update product quantity with the counted value
+        product = item.product
+        product.quantity = item.quantity_counted
+        product.save()
+
+    return redirect('pos:index')

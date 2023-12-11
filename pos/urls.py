@@ -23,6 +23,7 @@ urlpatterns = [
     path('eshop/expiring/', views.expiring, name='expiring'),
     path('eshop/receivings/', views.receivings, name='received'),
     path('eshop/supplies/', views.supplies, name='supplies'),
+    path('eshop/about/', views.about, name='about'),
 
 
 

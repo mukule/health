@@ -13,16 +13,13 @@ def is_superuser_admin_cashier(user):
 
 
 def index(request):
-    # Retrieve all categories
     categories = Category.objects.all()
 
     # Retrieve all products
     products_list = Product.objects.all()
 
-    # Handle search filter by title
     title_filter = request.GET.get('title')
-    
-    # Check if a category filter is specified in the URL
+
     category_id = request.GET.get('category')
     if category_id:
         selected_category = get_object_or_404(Category, id=category_id)
@@ -33,27 +30,30 @@ def index(request):
     if title_filter:
         products_list = products_list.filter(title__icontains=title_filter)
 
-    # Paginate the products with 9 products per page
     paginator = Paginator(products_list, 9)
     page = request.GET.get('page')
 
     try:
         products = paginator.page(page)
     except PageNotAnInteger:
-        # If page is not an integer, deliver first page
         products = paginator.page(1)
     except EmptyPage:
-        # If page is out of range (e.g., 9999), deliver last page of results
+
         products = paginator.page(paginator.num_pages)
 
-    # Retrieve the first 10 products with the highest quantities
-    top_10_products = Product.objects.order_by('-quantity')[:10]
+    slider1 = Promotion.objects.all()
+    slider2 = Product.objects.order_by('-price')[:5]
+    about = About.objects.all()
+    available_products = Product.objects.filter(quantity__gt=0)
 
     context = {
         'categories': categories,
         'products': products,
-        'top_10_products': top_10_products,
-        'selected_category': selected_category,  # Add the selected category to the context
+        's1': slider1,
+        's2': slider2,
+        'selected_category': selected_category,
+        'about': about,
+        'ap': available_products,
     }
 
     return render(request, 'main/index.html', context)
@@ -67,7 +67,8 @@ def create_buyer(request):
         if form.is_valid():
             # Create a new Buyer instance and save it to the database
             buyer = form.save()
-            return redirect('main:buyers')  # Replace 'buyer_list' with the URL name for listing buyers
+            # Replace 'buyer_list' with the URL name for listing buyers
+            return redirect('main:buyers')
     else:
         form = BuyerForm()
 
@@ -90,6 +91,18 @@ def buyers(request):
     return render(request, 'main/buyers.html', context)
 
 
-
 def print_and_cut(request):
-   return render(request, 'main/receipt.html')
+    return render(request, 'main/receipt.html')
+
+
+def create_about(request):
+    if request.method == 'POST':
+        form = AboutForm(request.POST)
+        if form.is_valid():
+            form.save()
+            # Redirect to a success page or do something else
+            return redirect('pos:about')
+    else:
+        form = AboutForm()
+
+    return render(request, 'main/create_about.html', {'form': form})

@@ -1,0 +1,43 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .card {
+        height: 100%;
+    }
+
+    .card-body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+</style>
+
+<div class="page-content">
+    <div class="container">
+        <div class="row">
+           {%if about%}
+           {% for a in about%}
+           <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{a.title}}</h5>
+                    <h6 class="card-title">{{a.description}}</h>
+                </div>
+            </div>
+        </div>
+        {%endfor%}
+         {%else%}
+         <p>No Details about about Health today added</p>
+         {%endif%}
+        
+            
+    </div>
+    <div class="text-center mt-3">
+        <a href="{% url 'main:create_about' %}" class="btn btn-primary">Add about</a>
+    </div>
+</div>
+{% endblock content %}

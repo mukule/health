@@ -20,6 +20,21 @@
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
         
+        <style>
+            .flashing-text {
+                animation: flash 4s infinite;
+            }
+            
+            @keyframes flash {
+                0%, 100% {
+                    opacity: 0;
+                }
+                50% {
+                    opacity: 1;
+                }
+            }
+            </style>
+            
   
 
     </head>
@@ -335,6 +350,46 @@
         }
     });
 </script>
+
+    
+<script>
+    function shiftCards(direction) {
+        var row = document.getElementById('categoryRow');
+        var cards = row.getElementsByClassName('col-md-2');
+
+        if (direction === 'next') {
+            row.appendChild(cards[0].cloneNode(true));
+            row.removeChild(cards[0]);
+        } else if (direction === 'prev') {
+            var lastCard = cards[cards.length - 1].cloneNode(true);
+            row.insertBefore(lastCard, cards[0]);
+            row.removeChild(cards[cards.length - 1]);
+        }
+
+        // Hide excess cards
+        var visibleCards = row.getElementsByClassName('col-md-2');
+        for (var i = 0; i < visibleCards.length; i++) {
+            if (i < visibleCards.length - 6) {
+                visibleCards[i].style.display = 'none';
+            } else {
+                visibleCards[i].style.display = 'block';
+            }
+        }
+    }
+
+    // Hide excess cards on page load
+    window.onload = function() {
+        var row = document.getElementById('categoryRow');
+        var visibleCards = row.getElementsByClassName('col-md-2');
+        for (var i = 0; i < visibleCards.length; i++) {
+            if (i >= 6) {
+                visibleCards[i].style.display = 'none';
+            }
+        }
+    };
+</script>
+
+
 
 
 
