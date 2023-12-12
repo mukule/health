@@ -421,11 +421,14 @@ def stock_movement(request):
     return render(request, 'product/stock_movement.html', context)
 
 
-@login_required
-@user_passes_test(is_superuser_admin_cashier, login_url='users:not_authorized')
+@second
 def suppliers(request):
     suppliers = Supplier.objects.all()
-    context = {'suppliers': suppliers}
+    user = request.user
+    context = {
+        'suppliers': suppliers,
+        'user': user
+    }
     return render(request, 'product/suppliers.html', context)
 
 

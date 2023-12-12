@@ -135,7 +135,8 @@ class SupplierForm(forms.ModelForm):
         queryset=Category.objects.all(),
         widget=forms.Select(
             attrs={'class': 'form-control category-selector', 'id': 'id_category_supplied'}),
-        label='Category Supplied'
+        label='Category Supplied',
+        empty_label="--Select product category--"
     )
 
     products = forms.ModelMultipleChoiceField(
@@ -143,7 +144,7 @@ class SupplierForm(forms.ModelForm):
         widget=forms.SelectMultiple(
             attrs={'class': 'form-control', 'placeholder': 'Select Category first', 'id': 'id_products_supplied'}),
         label='Products Supplied',
-        required=False
+
     )
 
     class Meta:
