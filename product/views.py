@@ -436,7 +436,9 @@ def supplier_create(request):
 
     if request.method == 'POST':
         form = SupplierForm(request.POST)
+        print(form.data)
         if form.is_valid():
+            print(form.data)
             form.save()
             # Redirect to the supplier list view after successful creation
             return redirect('product:suppliers')
@@ -445,14 +447,12 @@ def supplier_create(request):
             print(form.errors)
     else:
         form = SupplierForm()
+        print(form.data)
 
     products_by_category = {}
     for category in categories:
         products = Product.objects.filter(category=category)
-
-        products_by_category[category.id] = products
-
-        print(products_by_category)
+        products_by_category[category.id] = serialize('json', products)
 
     context = {
         'form': form,

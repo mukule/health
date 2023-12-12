@@ -43,27 +43,40 @@
     </div>
 </div>
 
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         var categorySelect = document.getElementById('id_category_supplied');
-        
+        var productsSelect = document.getElementById('id_products_supplied');
+        var productsByCategory = {{ products|safe }};
+
         categorySelect.addEventListener('change', function () {
             var selectedCategoryId = categorySelect.value;
             console.log("Selected Category ID:", selectedCategoryId);
+
+            // Check if the selected category ID exists in the productsByCategory dictionary
+            if (selectedCategoryId in productsByCategory) {
+                var selectedCategoryProducts = JSON.parse(productsByCategory[selectedCategoryId]);
+
+                // Clear existing options
+                productsSelect.innerHTML = '';
+
+                // Add new options based on the selected category
+                selectedCategoryProducts.forEach(function (product) {
+                    var option = document.createElement('option');
+                    option.value = product.pk;  // Assuming 'pk' is the primary key
+                    option.text = product.fields.title;  // Change this to the actual property you want to display
+                    productsSelect.add(option);
+                });
+            } else {
+                // Clear options if no products are available for the selected category
+                productsSelect.innerHTML = '<option value="">No products available</option>';
+            }
         });
 
-        // Add the following lines to log form data when the form is submitted
-        document.querySelector('form').addEventListener('submit', function(event) {
-            var formData = new FormData(event.target);
-            formData.forEach(function(value, key){
-                console.log("Form Data:", key, value);
-            });
-        });
+        // ... (the rest of your script)
     });
 </script>
-
-
-
 
 
 
