@@ -168,12 +168,12 @@ class ReceivingForm(forms.ModelForm):
         empty_label='Select Supplier'
     )
 
-    products = forms.ChoiceField(
-        choices=[('', 'Select Product')],
+    products = forms.ModelChoiceField(
+        queryset=Product.objects.all(),
         widget=forms.Select(
             attrs={'class': 'form-control', 'id': 'products-select'}),
         label='Products',
-
+        empty_label='Select Product'
     )
 
     product_quantity = forms.IntegerField(
@@ -186,7 +186,7 @@ class ReceivingForm(forms.ModelForm):
         max_digits=10,
         decimal_places=2,
         widget=forms.NumberInput(
-            attrs={'class': 'form-control', 'placeholder': 'Enter unit price'}),
+            attrs={'class': 'form-control', 'id': 'product-price', 'placeholder': 'Enter unit price', 'readonly': 'readonly'}),
         label='Product Unit Price'
     )
 

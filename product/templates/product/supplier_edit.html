@@ -1,0 +1,83 @@
+{% extends 'main/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-8">
+                <div class="card shadow-lg p-3 mb-5 bg-white rounded">
+                    <div class="card-body">
+                        <h2 class="card-title text-center">Add New Supplier</h2>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                {{ form.name|as_crispy_field }}
+                            </div>
+                            <div class="form-group">
+                                {{ form.contact_person|as_crispy_field }}
+                            </div>
+                            <div class="form-group">
+                                {{ form.email|as_crispy_field }}
+                            </div>
+                            <div class="form-group">
+                                {{ form.phone_number|as_crispy_field }}
+                            </div>
+                            <div class="form-group">
+                                {{ form.address|as_crispy_field }}
+                            </div>
+                            <div class="form-group">
+                                {{ form.category|as_crispy_field }}
+                            </div>
+                            <div class="form-group">
+                                {{ form.products|as_crispy_field }}
+                            </div>
+                          
+                            <button type="submit" class="btn btn-primary btn-block">Submit</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var categorySelect = document.getElementById('id_category_supplied');
+        var productsSelect = document.getElementById('id_products_supplied');
+        var productsByCategory = {{ products|safe }};
+
+        categorySelect.addEventListener('change', function () {
+            var selectedCategoryId = categorySelect.value;
+            console.log("Selected Category ID:", selectedCategoryId);
+
+            // Check if the selected category ID exists in the productsByCategory dictionary
+            if (selectedCategoryId in productsByCategory) {
+                var selectedCategoryProducts = JSON.parse(productsByCategory[selectedCategoryId]);
+
+                // Clear existing options
+                productsSelect.innerHTML = '';
+
+                // Add new options based on the selected category
+                selectedCategoryProducts.forEach(function (product) {
+                    var option = document.createElement('option');
+                    option.value = product.pk;  // Assuming 'pk' is the primary key
+                    option.text = product.fields.title;  // Change this to the actual property you want to display
+                    productsSelect.add(option);
+                });
+            } else {
+                // Clear options if no products are available for the selected category
+                productsSelect.innerHTML = '<option value="">No products available</option>';
+            }
+        });
+
+        // ... (the rest of your script)
+    });
+</script>
+
+
+
+{% endblock content %}

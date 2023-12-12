@@ -247,7 +247,7 @@ class Receiving(models.Model):
         CustomUser, on_delete=models.SET_NULL, null=True)
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
     received_date = models.DateTimeField(auto_now_add=True)
-    products = models.ManyToManyField(Product, through='ReceivedProduct')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return f"Receiving #{self.id} - {self.received_date}"

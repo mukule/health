@@ -421,6 +421,7 @@ def stock_movement(request):
     return render(request, 'product/stock_movement.html', context)
 
 
+@login_required
 @second
 def suppliers(request):
     suppliers = Supplier.objects.all()
@@ -433,7 +434,7 @@ def suppliers(request):
 
 
 @login_required
-@third
+@second
 def supplier_create(request):
     categories = Category.objects.all()
 
@@ -470,66 +471,104 @@ def supplier_create(request):
     return render(request, 'product/supplier_form.html', context)
 
 
+def supplier_edit(request, pk):
+    supplier = get_object_or_404(Supplier, pk=pk)
+    categories = Category.objects.all()
+
+    if request.method == 'POST':
+        form = SupplierForm(request.POST, instance=supplier)
+        if form.is_valid():
+            form.save()
+            # Redirect to the supplier list view after successful edit
+            return redirect('product:suppliers')
+        else:
+            # Print or log form errors if validation fails
+            print(form.errors)
+    else:
+        form = SupplierForm(instance=supplier)
+
+    products_by_category = {}
+    for category in categories:
+        products = Product.objects.filter(category=category)
+        products_by_category[category.id] = serialize('json', products)
+
+    context = {
+        'form': form,
+        'categories': categories,
+        'products': products_by_category
+    }
+
+    # Add form errors to the context to display them in the template
+    if form.errors:
+        context['form_errors'] = form.errors
+
+    return render(request, 'product/supplier_edit.html', context)
+
+
+def supplier_delete(request, pk):
+    supplier = get_object_or_404(Supplier, pk=pk)
+
+    supplier.delete()
+    # Redirect to the supplier list view after successful deletion
+    return redirect('product:suppliers')
+
+
 @login_required
 def receivings(request):
+    supplier = None
+
     if request.method == 'POST':
         form = ReceivingForm(request.POST)
         if form.is_valid():
-            # Process the form data
             supplier = form.cleaned_data['supplier']
-            product_ids = form.cleaned_data['products']
+            product_id = form.cleaned_data['products']
             product_quantity = form.cleaned_data['product_quantity']
             product_unit_price = form.cleaned_data['product_unit_price']
 
             # Create Receiving instance with the logged-in user as the receiver
             receiving = form.save(commit=False)
-            receiving.receiver = request.user  # Set the receiver to the logged-in user
+            receiving.receiver = request.user
             receiving.save()
 
-            # Associate products with the receiving instance
-            for product_id in product_ids:
-                product = Product.objects.get(pk=product_id)
-                ReceivedProduct.objects.create(
-                    receiving=receiving,
-                    product=product,
-                    product_quantity=product_quantity,
-                    unit_price=product_unit_price
-                )
+            # Associate the product with the receiving instance
+            product = Product.objects.get(pk=product_id)
+            ReceivedProduct.objects.create(
+                receiving=receiving,
+                product=product,
+                product_quantity=product_quantity,
+                unit_price=product_unit_price
+            )
 
-                # Update or create a corresponding Supply instance
-                supply, created = Supply.objects.get_or_create(
-                    supplier=supplier,
-                    product=product,
-                    defaults={
-                        'price': product_unit_price,
-                        'total_amount': product_quantity * product_unit_price,
-                        'paid': False
-                    }
-                )
+            # Update or create a corresponding Supply instance
+            supply, created = Supply.objects.get_or_create(
+                supplier=supplier,
+                product=product,
+                defaults={
+                    'price': product_unit_price,
+                    'total_amount': product_quantity * product_unit_price,
+                    'paid': False
+                }
+            )
 
-                supply.price = product_unit_price
-                supply.total_amount = product_quantity * product_unit_price
-                supply.paid = False
-                supply.save()
+            supply.price = product_unit_price
+            supply.total_amount = product_quantity * product_unit_price
+            supply.paid = False
+            supply.save()
 
             messages.success(
                 request, 'Products received successfully, add them to stock now by adjusting quantities for existing products or create new ones.')
             return redirect('product:products')
-
     else:
         form = ReceivingForm()
         suppliers = Supplier.objects.all()
-        categories = Category.objects.all()
-        suppliers_with_products = []
+        supplier_with_products = {}
 
         for supplier in suppliers:
-            categories_supplied = supplier.products_supplied.all()
-            products = Product.objects.filter(
-                category__in=categories_supplied)
-            suppliers_with_products.append(
-                {'supplier': supplier, 'products': products})
+            products_for_supplier = supplier.products.all()
+            supplier_with_products[supplier.id] = serialize(
+                'json', products_for_supplier)
 
-    return render(request, 'product/receiving.html', {'form': form, 'products': suppliers_with_products, 'categories': categories})
+    return render(request, 'product/receiving.html', {'form': form, 'supplier_with_products': supplier_with_products})
 
 
 @login_required
