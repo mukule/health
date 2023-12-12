@@ -155,15 +155,15 @@ class ReceivingForm(forms.ModelForm):
         widget=forms.Select(
             attrs={'class': 'form-control', 'id': 'supplier-select'}),
         label='Supplier',
-        empty_label='Select Supplier'  # Add this line for the placeholder
+        empty_label='Select Supplier'
     )
 
     products = forms.ChoiceField(
-        choices=[('', 'Select Product')] + [(product.id, str(product))
-                                            for product in Product.objects.all()],
+        choices=[('', 'Select Product')],
         widget=forms.Select(
             attrs={'class': 'form-control', 'id': 'products-select'}),
-        label='Products'
+        label='Products',
+
     )
 
     product_quantity = forms.IntegerField(

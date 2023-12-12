@@ -10,7 +10,7 @@
                 <div class="card shadow-lg p-3 mb-5 bg-white rounded">
                     <div class="card-body">
                         <h2 class="card-title text-center">Receive Products</h2>
-                        <form method="post">
+                        <form method="post" id="receiveForm">
                             {% csrf_token %}
 
                             <div class="form-group">
@@ -25,7 +25,11 @@
 
                             <div class="form-group">
                                 {{ form.products.label_tag }}
-                                {{ form.products }}
+                                <select name="products" id="id_products" class="form-control">
+                                    {% for product in products %}
+                                        <option value="{{ product.id }}">{{ product.title }}</option>
+                                    {% endfor %}
+                                </select>
                                 {% if form.products.errors %}
                                     <div class="text-danger">
                                         {{ form.products.errors.0 }}
@@ -61,6 +65,69 @@
         </div>
     </div>
 </div>
+
+
+<script>
+    // JavaScript to handle dynamically updating products and initial unit price based on the selected supplier
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('DOMContentLoaded event fired');
+
+        const supplierSelect = document.getElementById('supplier-select');
+        const productsSelect = document.getElementById('id_products');
+        const unitPriceField = document.getElementById('id_product_unit_price'); // Update with the actual ID
+
+        const productsBySupplier = {
+            {% for supplier_with_products in products %}
+                '{{ supplier_with_products.supplier.id }}': [
+                    {% for product in supplier_with_products.products %}
+                        {'id': '{{ product.id }}', 'title': '{{ product.title }}', 'price': '{{ product.price }}'},
+                    {% endfor %}
+                ],
+            {% endfor %}
+        };
+
+        let productsForSelectedSupplier = [];
+
+        if (!supplierSelect || !productsSelect || !unitPriceField) {
+            console.error('Could not find the supplier, products, or unit price element.');
+            return;
+        }
+
+        supplierSelect.addEventListener('change', function () {
+            const selectedSupplierId = supplierSelect.value;
+            console.log('Selected Supplier ID:', selectedSupplierId);
+
+            // Retrieve products for the selected supplier from the pre-loaded data
+            productsForSelectedSupplier = productsBySupplier[selectedSupplierId];
+            console.log('Selected Supplier:', selectedSupplierId);
+            console.log('Products for selected supplier:', productsForSelectedSupplier);
+
+            // Clear existing options
+            productsSelect.innerHTML = '';
+
+            // Add new options based on the fetched data
+            productsForSelectedSupplier.forEach(product => {
+                const option = document.createElement('option');
+                option.value = product.id;
+                option.textContent = product.title;
+                productsSelect.appendChild(option);
+            });
+
+            // Set the initial value of the unit price based on the selected product
+            if (productsSelect.selectedIndex !== -1) {
+                unitPriceField.value = productsForSelectedSupplier[productsSelect.selectedIndex].price;
+            }
+        });
+
+        productsSelect.addEventListener('change', function () {
+            // Update the unit price when the selected product changes
+            if (productsSelect.selectedIndex !== -1) {
+                unitPriceField.value = productsForSelectedSupplier[productsSelect.selectedIndex].price;
+            }
+        });
+    });
+</script>
+
 
 
 {% endblock content %}

@@ -475,7 +475,7 @@ def receivings(request):
                     defaults={
                         'price': product_unit_price,
                         'total_amount': product_quantity * product_unit_price,
-                        'paid': False  # You can set this to True if payment is made during receiving
+                        'paid': False
                     }
                 )
 
@@ -486,12 +486,22 @@ def receivings(request):
 
             messages.success(
                 request, 'Products received successfully, add them to stock now by adjusting quantities for existing products or create new ones.')
-            return redirect('product:products')  # Redirect to a success page
+            return redirect('product:products')
 
     else:
         form = ReceivingForm()
+        suppliers = Supplier.objects.all()
+        categories = Category.objects.all()
+        suppliers_with_products = []
 
-    return render(request, 'product/receiving.html', {'form': form})
+        for supplier in suppliers:
+            categories_supplied = supplier.products_supplied.all()
+            products = Product.objects.filter(
+                category__in=categories_supplied)
+            suppliers_with_products.append(
+                {'supplier': supplier, 'products': products})
+
+    return render(request, 'product/receiving.html', {'form': form, 'products': suppliers_with_products, 'categories': categories})
 
 
 @login_required
