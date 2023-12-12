@@ -30,7 +30,7 @@ urlpatterns = [
     path('supplier_create/', views.supplier_create, name='supplier_create'),
     path('receivings/', views.receivings, name='receivings'),
     path('dispatches/', views.dispatches, name='dispatches'),
-    path('dispatch/', views.dispatch, name='dispatch'),
+    path('dispatch/<int:product_id>/', views.dispatch, name='dispatch'),
     path('export_stock/', views.export_stock, name='export_stock'),
     path('p_promotion/', views.product_promotion, name='p_promotion'),
     path('p_promotion/<int:product_id>/', views.promotion, name='promotion'),
@@ -44,7 +44,7 @@ urlpatterns = [
     path('supplier/edit/<int:pk>/', views.supplier_edit, name='supplier_edit'),
     path('supplier/delete/<int:pk>/',
          views.supplier_delete, name='supplier_delete'),
-
+    path('products/d_product', views.d_product, name='d_product'),
 
 
 ]

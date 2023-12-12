@@ -514,6 +514,7 @@ def supplier_delete(request, pk):
 
 
 @login_required
+@third
 def receivings(request):
     supplier = None
 
@@ -521,7 +522,7 @@ def receivings(request):
         form = ReceivingForm(request.POST)
         if form.is_valid():
             supplier = form.cleaned_data['supplier']
-            product_id = form.cleaned_data['products']
+            product_id = form.cleaned_data['products'].id
             product_quantity = form.cleaned_data['product_quantity']
             product_unit_price = form.cleaned_data['product_unit_price']
 
@@ -531,12 +532,14 @@ def receivings(request):
             receiving.save()
 
             # Associate the product with the receiving instance
-            product = Product.objects.get(pk=product_id)
-            ReceivedProduct.objects.create(
+            product = get_object_or_404(Product, pk=product_id)
+            received_product, created = ReceivedProduct.objects.get_or_create(
                 receiving=receiving,
                 product=product,
-                product_quantity=product_quantity,
-                unit_price=product_unit_price
+                defaults={
+                    'product_quantity': product_quantity,
+                    'unit_price': product_unit_price
+                }
             )
 
             # Update or create a corresponding Supply instance
@@ -550,14 +553,18 @@ def receivings(request):
                 }
             )
 
+            # Update the product quantity
+            product.quantity += product_quantity
+            product.save()
+
             supply.price = product_unit_price
             supply.total_amount = product_quantity * product_unit_price
             supply.paid = False
             supply.save()
 
             messages.success(
-                request, 'Products received successfully, add them to stock now by adjusting quantities for existing products or create new ones.')
-            return redirect('product:products')
+                request, 'Products received and stock updated sucessfully')
+            return redirect('pos:received')
     else:
         form = ReceivingForm()
         suppliers = Supplier.objects.all()
@@ -571,37 +578,49 @@ def receivings(request):
     return render(request, 'product/receiving.html', {'form': form, 'supplier_with_products': supplier_with_products})
 
 
+def d_product(request):
+    title_filter = request.GET.get('title', '')
+
+    # Apply filters if title filter is present
+    if title_filter:
+        all_products = Product.objects.filter(Q(title__icontains=title_filter))
+    else:
+        all_products = Product.objects.all()
+
+    context = {
+        'products': all_products,
+        'title_filter': title_filter,
+    }
+    return render(request, 'product/d_product.html', context)
+
+
 @login_required
-def dispatch(request):
+def dispatch(request, product_id):
+    product = get_object_or_404(Product, pk=product_id)
+
     if request.method == 'POST':
         form = DispatchForm(request.POST)
         if form.is_valid():
-            # Process the form data
-            product = form.cleaned_data['product']
             destination = form.cleaned_data['destination']
             reason = form.cleaned_data['reason']
             product_quantity = form.cleaned_data['product_quantity']
-
-            # Retrieve the product instance from the database to get the latest available quantity
-            product = Product.objects.get(pk=product.pk)
 
             # Check if there are enough products available for dispatch
             if product_quantity > product.quantity:
                 messages.error(
                     request, 'Not enough products available for dispatch.')
-                # Redirect to an error page or the same page
-                return redirect('product:dispatch')
+                return redirect('product:dispatch', product_id=product_id)
 
             # Create Dispatch instance
             dispatch = Dispatch.objects.create(
                 destination=destination,
                 reason=reason,
                 dispatcher=request.user,
-                product=product,  # Assign the product to the Dispatch instance
-                product_quantity=product_quantity  # Assign the quantity to the Dispatch instance
+                product=product,
+                product_quantity=product_quantity
             )
 
-            # No need to explicitly reference the product field in DispatchedProduct
+            # Create DispatchedProduct instance
             DispatchedProduct.objects.create(
                 dispatch=dispatch,
                 product_quantity=product_quantity
@@ -615,9 +634,10 @@ def dispatch(request):
             return redirect('product:dispatches')  # Redirect to a success page
 
     else:
-        form = DispatchForm()
+        # For GET requests, initialize the form with the product instance
+        form = DispatchForm(initial={'product': product})
 
-    return render(request, 'product/dispatch.html', {'form': form})
+    return render(request, 'product/dispatch.html', {'form': form, 'product': product})
 
 
 def dispatches(request):

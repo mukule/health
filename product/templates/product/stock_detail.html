@@ -41,6 +41,7 @@
                                         <th>ID</th>
                                         <th>Product</th>
                                         <th>Category</th>
+                                        <th>unit</th>
                                         <th>Price</th>
                                         <th>Quantity</th>
                                         <th>Action</th>
@@ -52,6 +53,7 @@
                                         <td>{{ stock_take_item.product.id }}</td>
                                         <td>{{ stock_take_item.product.title }}</td>
                                         <td>{{ stock_take_item.product.category }}</td>
+                                        <td>{{ stock_take_item.product.units }}</td>
                                         <td>{{ stock_take_item.product.price }}</td>
                                         <td>{{ stock_take_item.quantity_counted }}</td>
                                         <td><a href="{% url 'product:update_stock' stock.id stock_take_item.id %}">Update product Counts</a></td>
