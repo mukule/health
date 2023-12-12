@@ -131,16 +131,25 @@ class SupplierForm(forms.ModelForm):
         label='Address'
     )
 
-    products_supplied = forms.ModelMultipleChoiceField(
+    category = forms.ModelChoiceField(
         queryset=Category.objects.all(),
-        widget=forms.SelectMultiple(attrs={'class': 'form-control'}),
-        label='Products Supplied'
+        widget=forms.Select(
+            attrs={'class': 'form-control category-selector', 'id': 'id_category_supplied'}),
+        label='Category Supplied'
+    )
+
+    products = forms.ModelMultipleChoiceField(
+        queryset=Product.objects.none(),
+        widget=forms.SelectMultiple(
+            attrs={'class': 'form-control', 'placeholder': 'Select Category first', 'id': 'id_products_supplied'}),
+        label='Products Supplied',
+        required=False
     )
 
     class Meta:
         model = Supplier
         fields = ['name', 'contact_person', 'email',
-                  'phone_number', 'address', 'products_supplied']
+                  'phone_number', 'address', 'products', 'category']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

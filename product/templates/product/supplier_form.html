@@ -12,7 +12,28 @@
                         <h2 class="card-title text-center">Add New Supplier</h2>
                         <form method="post">
                             {% csrf_token %}
-                            {{ form|crispy }}
+                            <div class="form-group">
+                                {{ form.name|as_crispy_field }}
+                            </div>
+                            <div class="form-group">
+                                {{ form.contact_person|as_crispy_field }}
+                            </div>
+                            <div class="form-group">
+                                {{ form.email|as_crispy_field }}
+                            </div>
+                            <div class="form-group">
+                                {{ form.phone_number|as_crispy_field }}
+                            </div>
+                            <div class="form-group">
+                                {{ form.address|as_crispy_field }}
+                            </div>
+                            <div class="form-group">
+                                {{ form.category|as_crispy_field }}
+                            </div>
+                            <div class="form-group">
+                                {{ form.products|as_crispy_field }}
+                            </div>
+                          
                             <button type="submit" class="btn btn-primary btn-block">Add Supplier</button>
                         </form>
                     </div>
@@ -21,4 +42,29 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var categorySelect = document.getElementById('id_category_supplied');
+        
+        categorySelect.addEventListener('change', function () {
+            var selectedCategoryId = categorySelect.value;
+            console.log("Selected Category ID:", selectedCategoryId);
+        });
+
+        // Add the following lines to log form data when the form is submitted
+        document.querySelector('form').addEventListener('submit', function(event) {
+            var formData = new FormData(event.target);
+            formData.forEach(function(value, key){
+                console.log("Form Data:", key, value);
+            });
+        });
+    });
+</script>
+
+
+
+
+
+
 {% endblock content %}

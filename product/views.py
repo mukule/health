@@ -25,6 +25,9 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from .models import Product
 from users.decorators import *
+from django.core.serializers import serialize
+from django.http import JsonResponse
+import json
 
 
 def is_admin_or_superuser(user):
@@ -427,18 +430,40 @@ def suppliers(request):
 
 
 @login_required
-@user_passes_test(is_superuser_admin_cashier, login_url='users:not_authorized')
+@third
 def supplier_create(request):
+    categories = Category.objects.all()
+
     if request.method == 'POST':
         form = SupplierForm(request.POST)
         if form.is_valid():
             form.save()
             # Redirect to the supplier list view after successful creation
             return redirect('product:suppliers')
+        else:
+            # Print or log form errors if validation fails
+            print(form.errors)
     else:
         form = SupplierForm()
 
-    context = {'form': form}
+    products_by_category = {}
+    for category in categories:
+        products = Product.objects.filter(category=category)
+
+        products_by_category[category.id] = products
+
+        print(products_by_category)
+
+    context = {
+        'form': form,
+        'categories': categories,
+        'products': products_by_category
+    }
+
+    # Add form errors to the context to display them in the template
+    if form.errors:
+        context['form_errors'] = form.errors
+
     return render(request, 'product/supplier_form.html', context)
 
 
