@@ -595,6 +595,7 @@ def d_product(request):
 
 
 @login_required
+@third
 def dispatch(request, product_id):
     product = get_object_or_404(Product, pk=product_id)
 
@@ -640,11 +641,15 @@ def dispatch(request, product_id):
     return render(request, 'product/dispatch.html', {'form': form, 'product': product})
 
 
+@login_required
+@third
 def dispatches(request):
     dispatches_list = Dispatch.objects.all()
     return render(request, 'product/dispatches.html', {'dispatches_list': dispatches_list})
 
 
+@login_required
+@third
 def export_stock(request):
     # Retrieve all products from the database
     products = Product.objects.all()
@@ -706,6 +711,8 @@ def export_stock(request):
     return response
 
 
+@login_required
+@third
 def product_promotion(request):
     product_filter = request.GET.get('product_filter')
     title_filter = request.GET.get('title_filter')
@@ -726,6 +733,8 @@ def product_promotion(request):
     return render(request, 'product/p_promotion.html', context)
 
 
+@login_required
+@third
 def promotion(request, product_id):
     product = get_object_or_404(Product, id=product_id)
 
@@ -794,6 +803,8 @@ def promotion(request, product_id):
     return render(request, 'product/promotion.html', context)
 
 
+@login_required
+@third
 def edit_promotion(request, promotion_id):
     promotion = get_object_or_404(Promotion, id=promotion_id)
     product = promotion.product
@@ -854,11 +865,15 @@ def edit_promotion(request, promotion_id):
     return render(request, 'product/edit_promotion.html', context)
 
 
+@login_required
+@third
 def promotions(request):
     promo = Promotion.objects.all()
     return render(request, 'product/promotions.html', {'promo': promo})
 
 
+@login_required
+@third
 def delete_promotion(request, promotion_id):
     # Get the promotion object or return a 404 response if not found
     promotion = get_object_or_404(Promotion, id=promotion_id)
@@ -867,6 +882,8 @@ def delete_promotion(request, promotion_id):
     return redirect('product:promotions')
 
 
+@login_required
+@third
 def stock_update(request, stocktake_id):
     stocktake = get_object_or_404(StockTake, pk=stocktake_id)
     stocktake_items = StockTakeItem.objects.filter(stock_take=stocktake)

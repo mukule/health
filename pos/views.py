@@ -1,4 +1,5 @@
 # Import datetime from Python's datetime module
+from users.decorators import *
 from datetime import datetime, timedelta
 from django.db.models import Sum
 from django.db.models import *
@@ -39,6 +40,8 @@ from barcode.writer import ImageWriter
 receipts_storage = FileSystemStorage(location=settings.MEDIA_ROOT)
 
 
+@login_required
+@third
 def period(request):
     # Get the current year, month, and week number
     current_date = timezone.now()
@@ -109,6 +112,7 @@ def period(request):
 
 
 @login_required  # Require authentication to access this view
+@third
 def index(request):
     # Call the period function to ensure the current year exists
     period(request)
@@ -232,6 +236,7 @@ def index(request):
 
 
 @login_required
+@third
 def toggle_add_vat(request):
     # Get the user's cart
     cart = Cart.objects.get(user=request.user)
@@ -253,6 +258,7 @@ def toggle_add_vat(request):
 
 
 @login_required
+@third
 def add_to_cart(request, product_id, quantity=1):
     # Retrieve the product based on the product_id or handle errors if it doesn't exist
     product = get_object_or_404(Product, pk=product_id)
@@ -296,6 +302,8 @@ def add_to_cart(request, product_id, quantity=1):
     return redirect('pos:index')  # Replace 'cart' with your cart URL name
 
 
+@login_required
+@third
 def cart(request):
     # Check if the user is authenticated
     if request.user.is_authenticated:
@@ -328,6 +336,8 @@ def cart(request):
     return redirect('users:login')
 
 
+@login_required
+@third
 def update_discount(request):
     if request.method == 'POST':
         # Retrieve the user's cart
@@ -356,6 +366,8 @@ def update_discount(request):
     return render(request, 'pos/index.html')
 
 
+@login_required
+@third
 def increment_cart_item(request, item_id):
     cart_item = get_object_or_404(CartItem, id=item_id)
 
@@ -371,6 +383,8 @@ def increment_cart_item(request, item_id):
     return redirect('pos:index')
 
 
+@login_required
+@third
 def decrement_cart_item(request, item_id):
     cart_item = get_object_or_404(CartItem, id=item_id)
 
@@ -382,12 +396,16 @@ def decrement_cart_item(request, item_id):
     return redirect('pos:index')
 
 
+@login_required
+@third
 def remove_cart_item(request, item_id):
     cart_item = get_object_or_404(CartItem, id=item_id)
     cart_item.delete()
     return redirect('pos:index')
 
 
+@login_required
+@third
 def generate_pdf_receipt(sale, served_by_username):
     # Create a file-like buffer to receive PDF data.
     buffer = io.BytesIO()
@@ -666,6 +684,8 @@ def checkout(request):
     return redirect('pos:cart')
 
 
+@login_required
+@third
 def sales(request):
     # Get the current datetime with timezone information
     current_datetime = timezone.now()
@@ -716,6 +736,8 @@ def sales(request):
     return render(request, 'pos/sales.html', context)
 
 
+@login_required
+@third
 def sale(request, sale_id):
     # Retrieve the sale object for the given sale_id or return a 404 if not found
     sale = get_object_or_404(Sale, id=sale_id)
@@ -796,6 +818,8 @@ class DecimalEncoder(DjangoJSONEncoder):
         return super(DecimalEncoder, self).default(obj)
 
 
+@login_required
+@third
 def sales_h(request):
     # Retrieve all sales data (unfiltered)
     sales_data = Sale.objects.all().order_by('-sale_date')
@@ -871,10 +895,14 @@ def sales_h(request):
     return render(request, 'pos/sales_h.html', context)
 
 
+@login_required
+@third
 def menu(request):
     return render(request, 'pos/menu.html')
 
 
+@login_required
+@third
 def expiring(request):
     # Get the current date
     current_date = timezone.now().date()
@@ -897,16 +925,22 @@ def expiring(request):
     return render(request, 'pos/expiring.html', context)
 
 
+@login_required
+@third
 def receivings(request):
     receivings_list = Receiving.objects.all()
     return render(request, 'pos/receivings.html', {'receivings_list': receivings_list})
 
 
+@login_required
+@third
 def supplies(request):
     supplies_list = Supply.objects.all()
     return render(request, 'pos/supplies.html', {'supplies_list': supplies_list})
 
 
+@login_required
+@third
 def about(request):
     about = About.objects.all()
     return render(request, 'pos/about.html', {'about': about})
