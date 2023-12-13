@@ -24,6 +24,9 @@ urlpatterns = [
     path('eshop/receivings/', views.receivings, name='received'),
     path('eshop/supplies/', views.supplies, name='supplies'),
     path('eshop/about/', views.about, name='about'),
+     path('eshop/cataloque/', views.cataloque, name='cataloque'),
+     path('cataloque/<int:cataloque_id>/', views.cataloque_detail, name='cataloque_detail'),
+     path('export_cataloque/<int:cataloque_id>/', views.export_cataloque, name='export_cataloque'),
 
 
 

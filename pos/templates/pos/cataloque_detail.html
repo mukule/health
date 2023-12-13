@@ -1,0 +1,67 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 d-flex align-items-center justify-content-center">
+                    <div class="page-title-box text-center">
+                        <h4 class="mb-0 font-size-18">Health Today products</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4 text-center">{{cat.name}} Products</h4>
+        
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr> <th>#</th>
+                                        <th>Product</th>
+                                        <th>Category</th>
+                                        <th>Brand</th>
+                                        <th>Units</th>
+                                        <th>price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                  {% for product in products %}
+                                  <tr>
+                                    <td>{{forloop.counter}}</td>
+                                    <td>{{product.title}}</td>
+                                    <td>{{product.category}}</td>
+                                    <td>{{product.brand}}</td>
+                                    <td>{{product.units}}</td>
+                                    <td>{{product.price}}</td>
+                                  </tr>
+                                  {% empty %}
+
+                                  <tr>
+                                    <td colspan="6">No products in this category</td>
+                                </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                            
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{% url 'pos:export_cataloque' cat.id %}" class="btn btn-primary">Export this category</a>
+                        </div>
+                    </div>
+                    <!-- end card-body-->
+                </div>
+                <!-- end card -->
+            </div>
+
+        </div>
+        
+    </div>
+</div>
+{% endblock content %}

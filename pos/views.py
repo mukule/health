@@ -26,7 +26,7 @@ import io
 import usb.core
 from escpos.printer import Usb
 from reportlab.platypus import Table, TableStyle
-from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from django.db.models import Sum, F
 from django.db.models import DecimalField
@@ -38,6 +38,10 @@ from django.conf import settings
 from barcode import generate
 from barcode.writer import ImageWriter
 receipts_storage = FileSystemStorage(location=settings.MEDIA_ROOT)
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
+
 
 
 @login_required
@@ -944,3 +948,110 @@ def supplies(request):
 def about(request):
     about = About.objects.all()
     return render(request, 'pos/about.html', {'about': about})
+
+@login_required
+@third
+def cataloque(request):
+    cataloque = Category.objects.annotate(total_products=Count('product'))
+    context = {
+        'cat':cataloque
+    }
+    return render(request, 'pos/cataloque.html', context)
+
+
+def cataloque_detail(request, cataloque_id):
+    category = get_object_or_404(Category, pk=cataloque_id)
+    products_in_category = Product.objects.filter(category=category)
+
+    context = {
+        'cat': category,
+        'products': products_in_category,
+      
+    }
+
+    return render(request, 'pos/cataloque_detail.html', context)
+
+
+
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Image
+
+def export_cataloque(request, cataloque_id):
+    # Get category and products in the category
+    category = get_object_or_404(Category, pk=cataloque_id)
+    products_in_category = Product.objects.filter(category=category)
+
+    # Create PDF response
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{category.name}_products.pdf"'
+
+    # Create PDF document with letter size
+    p = SimpleDocTemplate(response, pagesize=letter)
+
+    # Add custom header and footer
+    header_text = "Health Today Products"
+    category_text = f"{category.name}"
+    footer_text = "+254794085329 \n | \n info@healthtoday.co.ke | St Ellis Building, City Hall Way, Nairobi, Kenya"
+
+    # Add table headers
+    headers = ['#', 'Product', 'Category', 'Brand', 'Units', 'Price']
+    col_widths = [30, 200, 110, 100, 50, 50]
+
+    # Create table data
+    table_data = [headers]
+    for index, product in enumerate(products_in_category):
+        row = [str(index + 1), product.title, product.category.name, str(product.brand), str(product.units), str(product.price)]
+        table_data.append(row)
+
+    # Create table and set styles
+    table = Table(table_data, colWidths=col_widths)
+    style = TableStyle([
+        ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, 0), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 4),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+        ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 4),
+        ('GRID', (0, 0), (-1, -1), 0.3, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ])
+    table.setStyle(style)
+
+    # Create header and footer paragraphs with centered alignment
+    styles = getSampleStyleSheet()
+
+    header_style = ParagraphStyle(
+        'Heading1',
+        parent=styles['Heading1'],
+        alignment=1  # 0=left, 1=center, 2=right
+    )
+    header = Paragraph(header_text, header_style)
+
+    category_paragraph_style = ParagraphStyle(
+        'Heading1',
+        parent=styles['Heading1'],
+        alignment=1  # 0=left, 1=center, 2=right
+    )
+    category_paragraph = Paragraph(category_text, category_paragraph_style)
+
+    footer_style = styles["BodyText"]
+    footer = Paragraph(footer_text, footer_style)
+
+    # Add a logo to the header
+    logo_path = 'https://healthtoday.co.ke/wp-content/uploads/2023/03/cropped-Logo-232x77.png'
+    logo = Image(logo_path, width=2*inch, height=1*inch)
+
+    # Build the PDF document with header, logo, and footer
+    story = [logo, header, category_paragraph, table, footer]
+    p.build(story)
+
+    return response

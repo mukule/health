@@ -1,0 +1,43 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .card {
+        height: 100%;
+    }
+
+    .card-body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+</style>
+
+<div class="page-content">
+    <div class="container">
+        <div class="row">
+            {% if cat %}
+            {% for c in cat %}
+
+            <div class="col-md-3 mb-4">
+                <a href="{% url 'pos:cataloque_detail' c.id %}">
+                 <div class="card">
+                     <div class="card-body">
+                         <h5 class="card-title">{{ c.name }}</h5>
+                         <p>{{c.total_products}} Products</p>
+                     </div>
+                 </div>
+                </a>
+             </div>
+
+            {%endfor%}
+            {% else %}
+            <h2>No Cataloque Available</h2>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock content %}
