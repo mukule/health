@@ -2,214 +2,220 @@
 {% load static %}
 
 {% block content %}
-<style>
-    .custom-card-group {
-        margin-right: 0px;
-        margin-left: 0px; 
-    }
 
-    .custom-card {
-        padding: 2px;
-        border: none;
-    }
-
-    .custom-card-body {
-        padding: 5px;
-        font-size: 10px;
-    }
-</style>
 <div class="page-content">
     <div class="container-fluid">
-        <div class="row mb-4 justify-content-center align-items-center">
-            <div class="col-md-12">
-                <!-- Filter Form -->
-                <form method="GET">
-                    <div class="form-group row justify-content-center align-items-center">
-                        <div class="col-12 col-md-4 mb-3">
-                            <select name="category" class="custom-select form-control custom-select-lg" style="border-radius: 10px;">
-                                <option value="">Select Category</option>
-                                {% for category in categories %}
-                                    <option value="{{ category.id }}">{{ category.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-12 col-md-4 mb-3">
-                            <input type="text" name="title" class="form-control form-control-lg" placeholder="Product Name" style="border-radius: 10px;">
-                        </div>
-                        <div class="col-12 col-md-2 mb-3">
-                            <button type="submit" class="btn btn-primary btn-lg btn-block">Enter</button>
-                        </div>
-                    </div>
-                </form>
-                
-                
-            </div>
-        </div>
         <div class="row">
-            <div class="col-md-8">
-                <div class="card-group custom-card-group">
-                    {% for product in products %}
-                    <div class="col-md-2 custom-card border-0">
-                        <!-- Product Card Here -->
-                        <a href="{% url 'pos:add_cart' product.id %}">
-                            <div class="card mb-0">
-                                <img src="{{ product.image.url }}" class="card-img-top img-fluid" alt="{{ product.title }}" style="height: 50px; object-fit: cover;">
-                                <div class="card-body custom-card-body text-center">
-                                    <p class="card-text mb-0">{{ product.title }}</p>
-                                    {% if product.brand %}
-                                    <p class="card-text">Brand: {{ product.brand }}</p>
-                                    {% endif %}
-                                    <!-- Display Units if not null -->
-                                    {% if product.units %}
-                                    <p class="card-text">Units: {{ product.units }}</p>
-                                    {% endif %}
-                                    <p class="card-text mb-0">In Stock: {{ product.quantity }}</p>
-                                    <p class="card-text">Ksh {{ product.price }}</p>
-                                    
+            <div class="{% if cart %}col-md-8{% else %}col-md-12{% endif %}">
+                <div class="row mb-1 justify-content-center align-items-center">
+                    <div class="col-md-12">
+                        <!-- Filter Form -->
+                        <form method="GET">
+                            <div class="form-group row justify-content-center align-items-center">
+                                <div class="col-12 col-md-5 mb-3">
+                                    <select name="category" class="custom-select form-control custom-select-lg shadow-lg border-0" style="border-radius: 25px;">
+                                        <option value="">Select Category</option>
+                                        {% for category in categories %}
+                                            <option value="{{ category.id }}">{{ category.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-5 mb-3">
+                                    <input type="text" name="title" class="form-control form-control-lg shadow-lg border-0" placeholder="Product Name" style="border-radius: 25px;">
+                                </div>
+                                <div class="col-12 col-md-2 mb-3">
+                                    <button type="submit" class="btn btn-primary btn-lg btn-block shadow-lg" style="border-radius: 25px;">Enter</button>
                                 </div>
                             </div>
-                        </a>
+                        </form>
+                        
+                        
                     </div>
-                    {% if forloop.counter|divisibleby:6 %}
-                    </div>
-                    <div class="card-group custom-card-group">
-                    {% endif %}
+                </div>
+                <div class="card-group custom-card-group">
+                    {% for product in products %}
+                        {% if forloop.counter <= 9 %}
+                            <div class="col-md-4 custom-card border-0 mb-3">
+                                <a href="{% url 'pos:add_cart' product.id %}">
+                                    <div class="card mb-0 shadow-lg" style="border-radius: 25px; overflow: hidden;">
+                                        <img src="{{ product.image.url }}" class="card-img-top img-fluid" onerror="this.src='https://shop.healthtoday.co.ke/media/products/PHOTO-2023-07-27-11-43-38.jpg'" alt="" style="height: 150px; object-fit: cover; padding: 10px; border-radius: 25px;">
+                                        <div class="card-body custom-card-body">
+                                            <p class="card-text mb-0">{{ product.title }}  {% if product.units %}{{ product.units }}{% endif %}</p>
+                                            <p class="card-text"><strong>Ksh {{ product.price }}</strong></p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        {% endif %}
                     {% endfor %}
                 </div>
-                <div class="row mt-4">
-                    <div class="col-md-12">
-                        <!-- Buttons -->
-                        <div class="row">
+            </div>
+            
+            
+
+          {% if cart %}
+          <div class="col-md-4">
+            <div class="card border-0 shadow-lg" style="border-radius: 25px;">
+                <div class="card-body">
+                    <h1 class="card-title mb-4"><strong>Bills</strong></h1>
+                    {% for item in cart %}
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <div class="d-flex align-items-center">
+                                <!-- Product image -->
+                                <img src="{{ item.product.image.url }}" alt="" onerror="this.src='https://shop.healthtoday.co.ke/media/products/PHOTO-2023-07-27-11-43-38.jpg'" class="mr-2" style="max-height: 50px; max-width: 50px; object-fit: cover; border-radius: 25%;">
+                        
+                                <!-- Title and quantity information -->
+                                <div>
+                                    <h5 class="card-title">{{ item.product.title }}</h5>
+                                    <p>Products Remaining: {{ item.product.quantity }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+        
+                        <!-- Product Price Column (2 cols) -->
+                        <div class="col-md-4 text-right">
+                            <p>Ksh {{ item.product.price }}</p>
+                        </div>
+                    </div>
+                    <div class="row text-center mb-3">
+                        <div class="col-md-6">
+                            <a href="{% url 'pos:remove_cart_item' item.id %}" class="btn btn-primary waves-effect waves-light shadow-lg" style="border-radius: 25px;">Remove</a>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="btn-group btn-group-lg" role="group" aria-label="Large button group">
+                                <a href="{% url 'pos:decrement_cart_item' item.id %}" class="btn btn-primary waves-effect waves-light " style="border-radius: 25px;"> - </a>
+                                <button type="button" class="btn btn-danger waves-effect shadow-lg" style="border-radius: 25px;">{{ item.quantity }}</button>
+                                <a href="{% url 'pos:increment_cart_item' item.id %}" class="btn btn-primary waves-effect waves-light " style="border-radius: 25px;"> + </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                  <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-1">Sub Total:</p>
+                        <p class="mb-1">Discount:</p>
+                        <p class="mb-1">Tax:</p>
+                        <hr class="my-1">
+                        <p class="mb-0"><strong>Total:</strong></p>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-right">
+                            <p class="mb-1"><span class="font-weight-bold">{{ total }}</span></p>
+                            <p class="mb-1"><span class="font-weight-bold">{{ discount }}</span></p>
+                            <p class="mb-1"><span class="font-weight-bold">{{ vat }}</span></p>
+                            <hr class="my-1">
+                            <p class="mb-0"><strong>{{ carts.total_payable }}</strong></p>
+                        </div>
+                    </div>
+                    
+                  </div>
+                    
+                </div>
+            </div>
+            <div class="card border-0 shadow-lg" style="border-radius: 25px;">
+                <div class="card-body">
+                    <h1 class="card-title mb-1 text-center"><strong>Discount And Tax Section</strong></h1>
+                    <div class="card-text">
+                        <form method="post" action="{% url 'pos:update_discount' %}">
+                         {% csrf_token %}
+                         
+                         <div class="row text-center mb-3 mt-3">
+                             <div class="col-md-6">
+                                 <input type="number" name="new_discount" id="discount" class="form-control shadow-lg border-0" placeholder="Enter Discount amt" value="{{ carts.discount}}" style="border-radius: 25px;">
+                             </div>
+                             <div class="col-md-3">
+                                <button type="submit" class="btn btn-primary shadow-lg" title="Process Discount" style="border-radius: 25px;">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                {% if carts.add_vat %}
+                                <a href="{% url 'pos:toggle_vat' %}" class="btn btn-danger waves-effect waves-light btn-block shadow-lg" title="Click to Remove VAT(16%)" style="border-radius: 25px;">- VAT</a>
+                                {% else %}
+                                    <a href="{% url 'pos:toggle_vat' %}" class="btn btn-danger waves-effect waves-light btn-block shadow-lg" title="Click to add VAT(16%)" style="border-radius: 25px;">+ VAT</a>
+                                {% endif %}
+                            </div>
+                         </div>
+                     </form>
+   
+                     </div>
+                </div>
+            </div>
+            <div class="card border-0 shadow-lg" style="border-radius: 25px;">
+                <div class="card-body">
+                    <h1 class="card-title mb-1 text-center"><strong>Customer section</strong></h1>
+                    <div class="card-text">
+                        <form method="get">
+                           <div class="row text-center mb-3 mt-3">
+                           <div class="col-md-10">
+                            <div class="form-group">
+                                <input type="text" id="buyer_name" name="buyer_name" class="form-control border-0 shadow-lg" style="border-radius: 25px;" placeholder="Enter Customer Name or Phone Number">
+                            </div>
+                           </div>
+                           <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary btn-block shadow-lg" style="border-radius: 25px;">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            
+                           </div>
+                           </div>
+                        </form>
+                    </div>
+                    
+                    {% if buyers %}
+                 
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Points</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for buyer in buyers %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ buyer.first_name }} {{ buyer.last_name }}</td>
+                                <td>{{ buyer.phone_number }}</td>
+                                <td>{{ buyer.points }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card border-0 shadow-lg" style="border-radius: 25px;">
+                <div class="card-body">
+                    <h1 class="card-title mb-1 text-center"><strong>Paymeny Method</strong></h1>
+                    <div class="card-text">
+                        <div class="row mt-3 mb-3">
                             {% for method in payment_methods %}
                             <div class="col-md-6 text-center mb-3">
-                                <a href="#" class="btn btn-primary btn-lg w-100" data-toggle="modal" data-target="#checkoutModal">{{ method.name }}</a>
+                                <a href="#" class="btn btn-primary btn-lg w-100 shadow-lg" style="border-radius: 25px;" data-toggle="modal" data-target="#checkoutModal">{{ method.name }}</a>
+                            </div>
+                            {% empty %}
+                            <div class="col-md-6 text-center mb-3">
+                                No payment Method available
                             </div>
                             {% endfor %}
                         </div>
-                    </div>
+   
+                     </div>
                 </div>
-               
-                
-            </div>
-            
-
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header">
-                        Cart ({{ count }})
-                    </div>
-                    <div class="card-body">
-                       
-            
-                        <!-- Iterate over cart items -->
-                        {% for item in cart %}
-                        <div class="row mb-3">
-                            <div class="col-md-8">
-                                <h5 class="card-title text-center">{{ item.product.title }}</h5>
-                                <p class="text-center">Products Remaining: {{ item.product.quantity }}</p>
-                            </div>
-            
-                            <!-- Product Price Column (2 cols) -->
-                            <div class="col-md-4 text-right">
-                                <p>Ksh {{ item.product.price }}</p>
-                            </div>
-                        </div>
-                        <div class="row text-center mb-3">
-                            <div class="col-md-6">
-                                <a href="{% url 'pos:remove_cart_item' item.id %}" class="btn btn-primary waves-effect waves-light">Remove</a>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="btn-group btn-group-lg" role="group" aria-label="Large button group">
-                                    <a href="{% url 'pos:decrement_cart_item' item.id %}" class="btn btn-primary waves-effect waves-light"> - </a>
-                                    <button type="button" class="btn btn-primary waves-effect">{{ item.quantity }}</button>
-                                    <a href="{% url 'pos:increment_cart_item' item.id %}" class="btn btn-primary waves-effect waves-light"> + </a>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    <div class="card-footer text-center">
-                       <form method="post" action="{% url 'pos:update_discount' %}">
-                        {% csrf_token %}
-                        
-                        <div class="row text-center mb-3">
-                            <div class="col-md-12">
-                                <label for="discount">Discount Amount:</label>
-                                <input type="number" name="new_discount" id="discount" class="form-control" value="{{ carts.discount}}">
-                            </div>
-                        </div>
-                        
-                        <div class="row text-center mb-3">
-                            <div class="col-md-12">
-                                <button type="submit" class="btn btn-primary">Validate Discount</button>
-                            </div>
-                        </div>
-                    </form>
-  
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-body">
-                        <form method="get">
-                            <div class="form-group">
-                                <input type="text" id="buyer_name" name="buyer_name" class="form-control" placeholder="Enter Buyer Name or Phone Number">
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-block">Search</button>
-                        </form>
-                        
-                        {% if buyers %}
-                     
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>No.</th>
-                                    <th>First Name</th>
-                                    <th>Last Name</th>
-                                    <th>Phone Number</th>
-                                    <th>Points</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for buyer in buyers %}
-                                <tr>
-                                    <td>{{ forloop.counter }}</td>
-                                    <td>{{ buyer.first_name }}</td>
-                                    <td>{{ buyer.last_name }}</td>
-                                    <td>{{ buyer.phone_number }}</td>
-                                    <td>{{ buyer.points }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                        {% endif %}
-                    </div>
-                </div>
-                
             </div>
             
         </div>
-        <!--payable amaount-->
-        <div class="row mt-4">
-            <div class="col-md-12 d-flex justify-content-between align-items-center">
-                <div class="col-md-4">
-                    <button type="button" class="btn btn-primary waves-effect waves-light btn-block" title="Gross amount">
-                        Total (Ksh  {{ total }})
-                    </button>
-                </div>
-                <div class="col-md-4">
-                    <button type="button" class="btn btn-primary waves-effect waves-light btn-block" title="Total amount to be paid">
-                        Payable (Ksh  {{ carts.total_payable }})
-                    </button>
-                </div>
-                <div class="col-md-4">
-                    {% if carts.add_vat %}
-                        <a href="{% url 'pos:toggle_vat' %}" class="btn btn-danger waves-effect waves-light btn-block">Remove VAT ({{vat}})</a>
-                    {% else %}
-                        <a href="{% url 'pos:toggle_vat' %}" class="btn btn-danger waves-effect waves-light btn-block" title="Click to add or Remove VAT(16%)">VAT ({{vat}})</a>
-                    {% endif %}
-                </div>
-            </div>
+          {%endif%}
+            <!--cart end-->
+            
         </div>
+       
         
         
     </div>

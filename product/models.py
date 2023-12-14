@@ -38,6 +38,14 @@ class Product(models.Model):
         ]
 
 
+class Category(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+
 class Promotion(models.Model):
     product = models.OneToOneField(
         Product, on_delete=models.CASCADE, related_name='promotion')
@@ -55,12 +63,6 @@ class Promotion(models.Model):
         verbose_name = 'Promotion'
         verbose_name_plural = 'Promotions'
 
-
-class Category(models.Model):
-    name = models.CharField(max_length=255, unique=True)
-
-    def __str__(self):
-        return self.name
 
 
 class About(models.Model):

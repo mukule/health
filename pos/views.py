@@ -41,7 +41,8 @@ receipts_storage = FileSystemStorage(location=settings.MEDIA_ROOT)
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
-
+from PIL import Image as PILImage
+import subprocess
 
 
 @login_required
@@ -232,6 +233,7 @@ def index(request):
         'categories': categories,
         'buyers': buyers,
         'payment_methods': payment_methods,
+        'discount':discount,
         'vat': vat,
         'total_payable': total_payable,
     }
@@ -298,9 +300,6 @@ def add_to_cart(request, product_id, quantity=1):
         cart_item.quantity = quantity
     cart_item.save()
 
-    # Show a success message with the product title and quantity
-    messages.success(
-        request, f'Added {quantity} {product.title} to cart successfully!')
 
     # Redirect to the cart or another appropriate URL
     return redirect('pos:index')  # Replace 'cart' with your cart URL name
@@ -430,15 +429,12 @@ def generate_pdf_receipt(sale, served_by_username):
     # Create the PDF object with custom page size (width x height)
     p = canvas.Canvas(buffer, pagesize=(page_width, page_height))
 
-    # Set the font and font size for the title
-    p.setFont("Helvetica-Bold", 12)
-
-    # Reduce the space from which the title starts from the top
-    title_y_position = page_height - 50
-
-    # Draw the title aligned to the left with padding
-    draw_left_aligned_text(p, "HEALTH TODAY LIMITED",
-                           x_left_aligned, title_y_position, "Helvetica-Bold", 12)
+    # Add a logo to the header
+    logo_path = 'https://healthtoday.co.ke/wp-content/uploads/2023/03/cropped-Logo-232x77.png'
+    logo_width = 100  # Adjust the width of the logo
+    logo_height = 50  # Adjust the height of the logo
+    x_centered_logo = (page_width - logo_width) / 2
+    p.drawInlineImage(logo_path, x_centered_logo, page_height - 20 - logo_height, width=logo_width, height=logo_height)
 
     # Set the font and font size for the shop details
     p.setFont("Helvetica", 10)
@@ -451,7 +447,7 @@ def generate_pdf_receipt(sale, served_by_username):
     sale_id = f"CASH SALE: {sale.id:04d}"
 
     # Calculate the y-positions for other content
-    address_y_position = title_y_position - 20
+    address_y_position = page_height - 100
     contact_y_position = address_y_position - 15
     date_y_position = contact_y_position - 15
     pin_y_position = date_y_position - 15
@@ -564,35 +560,43 @@ def generate_pdf_receipt(sale, served_by_username):
     # Generate a barcode image using the formatted sale ID
     barcode_image = generateBarcodeImage(formatted_sale_id)
 
-    # Calculate the x-position for centering the barcode
-    # Adjust the width (100) as needed
-    barcode_x_position = x_centered + (receipt_width - 100) / 2
+    # Calculate the x-position for centering the barcode within the receipt width
+    barcode_width = 100  # Adjust the width as needed
+    barcode_x_position = x_centered + (receipt_width - barcode_width) / 2
     barcode_y_position = served_by_y_position - 60  # Adjust as needed
 
-    thank_you_text = "Thank you for choosing Health Today."
-    thank_you_y_position = barcode_y_position - 40  # Adjust the vertical position
-    draw_left_aligned_text(p, thank_you_text, x_left_aligned,
-                           thank_you_y_position, "Helvetica", 10)
-
     # Draw the barcode on the PDF
-    p.drawImage(barcode_image, barcode_x_position,
-                barcode_y_position, width=100, height=50)
+    p.drawImage(barcode_image, barcode_x_position, barcode_y_position, width=barcode_width, height=50)
 
     # Close the PDF object cleanly, and we're done.
     p.showPage()
     p.save()
 
-    # FileResponse sets the Content-Disposition header so that browsers
-    # present the option to save the file.
+
+   # Reset the buffer for reading
     buffer.seek(0)
-    response = HttpResponse(buffer, content_type='application/pdf')
-    response['Content-Disposition'] = 'inline; filename="receipt.pdf"'
+
+    # Send the PDF to the printer (replace 'your-printer-name' with your actual printer name)
+  
+
+    subprocess.Popen(["lpr", "-P", "your-printer-name"], stdin=subprocess.PIPE).communicate(input=buffer.read())
+
+    # Close the buffer
+    buffer.close()
+
+    # Create a response
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="receipt.pdf"'
+
     return response
 
 
+# Function to draw left-aligned text
 def draw_left_aligned_text(pdf_canvas, text, x_position, y_position, font_name, font_size):
     pdf_canvas.setFont(font_name, font_size)
     pdf_canvas.drawString(x_position, y_position, text)
+
+
 
 
 def generateBarcodeImage(data):
