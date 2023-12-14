@@ -1,5 +1,3 @@
-# Import datetime from Python's datetime module
-import win32print
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Image
 from reportlab.lib.units import inch
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -570,11 +568,9 @@ def generate_pdf_receipt(sale, served_by_username):
   # Reset the buffer for reading
     buffer.seek(0)
 
-    print_pdf_to_default_printer(buffer)
-
     # Create a response
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="receipt.pdf"'
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = 'inline; filename="receipt.pdf"'
 
     return response
 
@@ -590,65 +586,6 @@ def generateBarcodeImage(data):
     barcode = generate('Code128', str(
         data), writer=ImageWriter(), output='barcode_image')
     return barcode
-
-
-def print_pdf_to_default_printer(buffer):
-    """
-    Print the content of a PDF buffer to the default printer using win32print.
-
-    Args:
-        buffer (io.BytesIO): The PDF buffer containing the PDF data.
-    """
-    try:
-        # Reset the buffer for reading
-        buffer.seek(0)
-
-        # # Print the content of the PDF buffer for debugging
-        # print(f"PDF Buffer Content: {buffer.getvalue()}")
-
-        # # Save the PDF buffer to a file for further inspection
-        # with open("debug_output.pdf", "wb") as debug_file:
-        #     debug_file.write(buffer.read())
-
-        # # Print the content of the PDF buffer for debugging
-        # print("PDF buffer saved to 'debug_output.pdf'")
-
-        # Get the default printer name
-        printer_name = win32print.GetDefaultPrinter()
-
-        # Check if a default printer is available
-        if not printer_name:
-            print("No default printer available.")
-            return
-
-        # Open the default printer
-        h_printer = win32print.OpenPrinter(printer_name)
-
-        # Start a print job
-        h_job = win32print.StartDocPrinter(
-            h_printer, 1, ("receipt", None, "RAW"))
-        win32print.StartPagePrinter(h_printer)
-
-        # Reset the buffer for reading again
-        buffer.seek(0)
-
-        # Write the PDF content to the printer
-        data = buffer.read()
-        if data:
-            win32print.WritePrinter(h_printer, data)
-        else:
-            print("Empty PDF data. No content to print.")
-
-        # End the print job
-        win32print.EndPagePrinter(h_printer)
-        win32print.EndDocPrinter(h_printer)
-
-    except Exception as e:
-        print(f"Error printing to default printer: {e}")
-    finally:
-        # Close the buffer
-        buffer.close()
-        return redirect('pos:index')
 
 
 @login_required
@@ -725,7 +662,6 @@ def checkout(request):
             # Generate the PDF receipt
 
             pdf_data = generate_pdf_receipt(sale, request.user.username)
-
             return pdf_data
 
         else:
