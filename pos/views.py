@@ -648,8 +648,11 @@ def print_pdf_to_default_printer(buffer):
     finally:
         # Close the buffer
         buffer.close()
+        return redirect('pos:index')
 
 
+@login_required
+@third
 @transaction.atomic
 def checkout(request):
     try:
@@ -723,7 +726,6 @@ def checkout(request):
 
             pdf_data = generate_pdf_receipt(sale, request.user.username)
 
-# Return the PDF as a response
             return pdf_data
 
         else:
