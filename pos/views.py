@@ -1,4 +1,15 @@
 # Import datetime from Python's datetime module
+import win32print
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Image
+from reportlab.lib.units import inch
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
+import subprocess
+from PIL import Image as PILImage
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.pagesizes import letter
 from users.decorators import *
 from datetime import datetime, timedelta
 from django.db.models import Sum
@@ -38,11 +49,6 @@ from django.conf import settings
 from barcode import generate
 from barcode.writer import ImageWriter
 receipts_storage = FileSystemStorage(location=settings.MEDIA_ROOT)
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
-from reportlab.lib.styles import getSampleStyleSheet
-from PIL import Image as PILImage
-import subprocess
 
 
 @login_required
@@ -140,10 +146,11 @@ def index(request):
 
     # Initialize cart_items, total_cost, vat, total_payable, and points to 0
     cart_items = None
-    total_cost = 0
-    vat = 0
-    total_payable = 0
-    points = 0
+    total_cost = 0.00
+    vat = 0.00
+    discount = 0.00
+    total_payable = 0.00
+    points = 0.00
 
     # Check if the user is authenticated and has a cart
     if request.user.is_authenticated:
@@ -210,19 +217,6 @@ def index(request):
         # If no filter provided, set 'buyers' to all buyers
         buyers = Buyer.objects.none()
 
-    # Pagination for products
-    paginator = Paginator(products, 12)  # 12 products per page
-    page = request.GET.get('page')
-
-    try:
-        products = paginator.page(page)
-    except PageNotAnInteger:
-        # If page is not an integer, deliver first page
-        products = paginator.page(1)
-    except EmptyPage:
-        # If page is out of range (e.g., 9999), deliver the last page of results
-        products = paginator.page(paginator.num_pages)
-
     payment_methods = PaymentMethod.objects.all()
 
     context = {
@@ -233,7 +227,7 @@ def index(request):
         'categories': categories,
         'buyers': buyers,
         'payment_methods': payment_methods,
-        'discount':discount,
+        'discount': discount,
         'vat': vat,
         'total_payable': total_payable,
     }
@@ -299,7 +293,6 @@ def add_to_cart(request, product_id, quantity=1):
     else:
         cart_item.quantity = quantity
     cart_item.save()
-
 
     # Redirect to the cart or another appropriate URL
     return redirect('pos:index')  # Replace 'cart' with your cart URL name
@@ -434,7 +427,8 @@ def generate_pdf_receipt(sale, served_by_username):
     logo_width = 100  # Adjust the width of the logo
     logo_height = 50  # Adjust the height of the logo
     x_centered_logo = (page_width - logo_width) / 2
-    p.drawInlineImage(logo_path, x_centered_logo, page_height - 20 - logo_height, width=logo_width, height=logo_height)
+    p.drawInlineImage(logo_path, x_centered_logo, page_height -
+                      20 - logo_height, width=logo_width, height=logo_height)
 
     # Set the font and font size for the shop details
     p.setFont("Helvetica", 10)
@@ -566,23 +560,17 @@ def generate_pdf_receipt(sale, served_by_username):
     barcode_y_position = served_by_y_position - 60  # Adjust as needed
 
     # Draw the barcode on the PDF
-    p.drawImage(barcode_image, barcode_x_position, barcode_y_position, width=barcode_width, height=50)
+    p.drawImage(barcode_image, barcode_x_position,
+                barcode_y_position, width=barcode_width, height=50)
 
     # Close the PDF object cleanly, and we're done.
     p.showPage()
     p.save()
 
-
-   # Reset the buffer for reading
+  # Reset the buffer for reading
     buffer.seek(0)
 
-    # Send the PDF to the printer (replace 'your-printer-name' with your actual printer name)
-  
-
-    subprocess.Popen(["lpr", "-P", "your-printer-name"], stdin=subprocess.PIPE).communicate(input=buffer.read())
-
-    # Close the buffer
-    buffer.close()
+    print_pdf_to_default_printer(buffer)
 
     # Create a response
     response = HttpResponse(content_type='application/pdf')
@@ -597,13 +585,69 @@ def draw_left_aligned_text(pdf_canvas, text, x_position, y_position, font_name, 
     pdf_canvas.drawString(x_position, y_position, text)
 
 
-
-
 def generateBarcodeImage(data):
     # Generate a barcode image using the Python barcode library
     barcode = generate('Code128', str(
         data), writer=ImageWriter(), output='barcode_image')
     return barcode
+
+
+def print_pdf_to_default_printer(buffer):
+    """
+    Print the content of a PDF buffer to the default printer using win32print.
+
+    Args:
+        buffer (io.BytesIO): The PDF buffer containing the PDF data.
+    """
+    try:
+        # Reset the buffer for reading
+        buffer.seek(0)
+
+        # # Print the content of the PDF buffer for debugging
+        # print(f"PDF Buffer Content: {buffer.getvalue()}")
+
+        # # Save the PDF buffer to a file for further inspection
+        # with open("debug_output.pdf", "wb") as debug_file:
+        #     debug_file.write(buffer.read())
+
+        # # Print the content of the PDF buffer for debugging
+        # print("PDF buffer saved to 'debug_output.pdf'")
+
+        # Get the default printer name
+        printer_name = win32print.GetDefaultPrinter()
+
+        # Check if a default printer is available
+        if not printer_name:
+            print("No default printer available.")
+            return
+
+        # Open the default printer
+        h_printer = win32print.OpenPrinter(printer_name)
+
+        # Start a print job
+        h_job = win32print.StartDocPrinter(
+            h_printer, 1, ("receipt", None, "RAW"))
+        win32print.StartPagePrinter(h_printer)
+
+        # Reset the buffer for reading again
+        buffer.seek(0)
+
+        # Write the PDF content to the printer
+        data = buffer.read()
+        if data:
+            win32print.WritePrinter(h_printer, data)
+        else:
+            print("Empty PDF data. No content to print.")
+
+        # End the print job
+        win32print.EndPagePrinter(h_printer)
+        win32print.EndDocPrinter(h_printer)
+
+    except Exception as e:
+        print(f"Error printing to default printer: {e}")
+    finally:
+        # Close the buffer
+        buffer.close()
 
 
 @transaction.atomic
@@ -953,12 +997,13 @@ def about(request):
     about = About.objects.all()
     return render(request, 'pos/about.html', {'about': about})
 
+
 @login_required
 @third
 def cataloque(request):
     cataloque = Category.objects.annotate(total_products=Count('product'))
     context = {
-        'cat':cataloque
+        'cat': cataloque
     }
     return render(request, 'pos/cataloque.html', context)
 
@@ -970,20 +1015,11 @@ def cataloque_detail(request, cataloque_id):
     context = {
         'cat': category,
         'products': products_in_category,
-      
+
     }
 
     return render(request, 'pos/cataloque_detail.html', context)
 
-
-
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Image
 
 def export_cataloque(request, cataloque_id):
     # Get category and products in the category
@@ -1009,7 +1045,8 @@ def export_cataloque(request, cataloque_id):
     # Create table data
     table_data = [headers]
     for index, product in enumerate(products_in_category):
-        row = [str(index + 1), product.title, product.category.name, str(product.brand), str(product.units), str(product.price)]
+        row = [str(index + 1), product.title, product.category.name,
+               str(product.brand), str(product.units), str(product.price)]
         table_data.append(row)
 
     # Create table and set styles
