@@ -1,0 +1,16 @@
+<!-- brands_list.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Available Brands</title>
+</head>
+<body>
+    <h1>Available Brands</h1>
+    <ul>
+        {% for brand in brands %}
+            <li>{{ brand.brand }} ({{ brand.count }})</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

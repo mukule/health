@@ -31,12 +31,12 @@
                                         <th>Phone</th>
                                         <th>Product Category</th>
                                         <th>Address</th>
-                                        <th>Products</th>
                                         {% if user.is_authenticated %}
                                         {% if user.access_level == 1 or user.access_level == 2 %}
                                         <th>Action</th>
                                         {% endif %}
                                     {% endif %}
+                                    <th>brands</th>
                                       
                                     </tr>
                                 </thead>
@@ -50,11 +50,6 @@
                                         <td>{{ supplier.phone_number }}</td>
                                         <td>{{ supplier.address }}</td>
                                         <td>{{ supplier.category }}</td>
-                                        <td>
-                                            {% for product in supplier.products.all %}
-                                                {{ product.title }}<br>
-                                            {% endfor %}
-                                        </td>
                                         <td>
                                             {% if user.is_authenticated %}
                                             {% if user.access_level == 1 or user.access_level == 2 %}
@@ -73,6 +68,7 @@
                                         {% endif %}
                 
                                         </td>
+                                        <td><a href="{% url 'product:brands' %}">brands</a></td>
                                         
                                     </tr>
                                     {% endfor %}

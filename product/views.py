@@ -30,21 +30,6 @@ from django.http import JsonResponse
 import json
 
 
-def is_admin_or_superuser(user):
-    return user.is_superuser or (user.access_level == 1)
-
-
-def is_superuser_admin_manager(user):
-    return user.is_superuser or (user.access_level in [1, 2])
-
-
-def is_superuser_admin_cashier(user):
-    return user.is_superuser or (user.access_level in [1, 3])
-
-
-def is_superuser_or_access_level_123(user):
-    return user.is_superuser or (user.access_level in [1, 2, 3])
-
 
 @login_required
 @second
@@ -364,7 +349,7 @@ def update_stock_take_item(request, stock_take_id, stock_take_item_id):
 
 
 @login_required
-@user_passes_test(is_superuser_admin_manager, login_url='users:not_authorized')
+@second
 def stock_movement(request):
     # Retrieve all products
     all_products = Product.objects.all()
@@ -895,3 +880,13 @@ def stock_update(request, stocktake_id):
         product.save()
 
     return redirect('pos:index')
+
+
+def brands(request):
+    # Get all unique brands from the Product model
+    brands = Product.objects.values('brand').exclude(brand__isnull=True).annotate(count=Count('brand'))
+
+    # You can pass the brands data to the template
+    context = {'brands': brands}
+
+    return render(request, 'product/brands.html', context)
