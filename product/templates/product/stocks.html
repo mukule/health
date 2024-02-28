@@ -33,7 +33,7 @@
                                         <th>Counted Value</th>
                                         <th>Difference</th>
                                         <th>Update Counts</th>
-                                        <th>Update stock</th>
+                                        <th class="text-center">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -49,13 +49,27 @@
                                             <td>{{ stock.value }}</td>
                                             <td>{{ stock.difference }}</td>
                                             <td><a href="{% url 'product:stock_detail' stock.id %}">Update counts</a></td>
-                                            <td><a href="#" onclick="confirmUpdate()">Submit Stock</a></td>
+                                            <td>
+                                                <a href="#" onclick="confirmUpdate()" class="btn btn-primary">Submit Stock</a>
+                                                {% if user.is_authenticated and user.access_level == 1 %}
+                                                <a href="#" onclick="confirmDelete()" class="btn btn-danger">Delete</a>
+                                            {% endif %}
+                                            
+                                            </td>
                                         </tr>
                                         <script>
                                             function confirmUpdate() {
                                                 var result = confirm("Are you sure you want to Submit the stock?");
                                                 if (result) {
                                                     window.location.href = "{% url 'product:stock_update' stock.id %}";
+                                                } 
+                                            }
+                                        </script>
+                                        <script>
+                                            function confirmDelete() {
+                                                var result = confirm("Are you sure you want to Delete this Stock Take ?");
+                                                if (result) {
+                                                    window.location.href = "{% url 'product:delete_stock_take' stock.id %}";
                                                 } 
                                             }
                                         </script>

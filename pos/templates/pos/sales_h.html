@@ -66,26 +66,46 @@
                     <div class="card-body text-center">
                         <h4 class="card-title mb-4">sales</h4>
                         <form method="get" class="mb-4 mx-auto">
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="start_date">Start Date</label>
-                                        <input type="date" class="form-control" id="start_date" name="start_date" value="{{ request.GET.start_date }}">
+                            <div class="row justify-content-center">
+                                <div class="col-md-8"> <!-- Set the form to take up 8 columns -->
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label for="start_date">Start Date</label>
+                                                <input type="date" class="form-control" id="start_date" name="start_date" value="{{ request.GET.start_date }}">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label for="end_date">End Date</label>
+                                                <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request.GET.end_date }}">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                {% if s_date and e_date %}
+                                                <a href="{% url 'pos:sales_h' %}" class="btn btn-primary mt-4 btn-block">Show all</a>
+                                                {%else%}
+                                                <button type="submit" class="btn btn-primary mt-4 btn-block">Filter</button>
+                                                {%endif%}
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="end_date">End Date</label>
-                                        <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request.GET.end_date }}">
+                                    {% if s_date and e_date %}
+                                    <div class="row text-center">
+                                        <div class="col-12 mx-auto">
+                                            <div class="alert alert-info" role="alert">
+                                                Showing sales for the date range: {{ s_date }} to {{ e_date }}
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <button type="submit" class="btn btn-primary mt-4">Filter</button>
-                                    </div>
+                                {% endif %}
+                                
+                                    
                                 </div>
                             </div>
                         </form>
+                        
                         
                         
                         <div class="table-responsive">

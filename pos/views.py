@@ -26,7 +26,7 @@ from django.core.paginator import Paginator
 import json
 from django.utils import timezone
 from datetime import date
-import datetime
+from datetime import datetime
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import FileResponse
@@ -880,6 +880,8 @@ def sales_h(request):
         'total_paid': total_paid_amount,
         'product_sales': product_sales,
         'chart_data': chart_data_json,
+        's_date': start_date_param,
+        'e_date': end_date_param
     }
 
     return render(request, 'pos/sales_h.html', context)

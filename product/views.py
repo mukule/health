@@ -279,6 +279,14 @@ def stock_detail(request, stock_take_id):
     })
 
 
+def delete_stock_take(request, stock_take_id):
+    stock_take = get_object_or_404(StockTake, pk=stock_take_id)
+
+    stock_take.delete()
+
+    return redirect('product:stocks') 
+
+
 @login_required
 @third
 def update_stock_take(request, stock_take_id):

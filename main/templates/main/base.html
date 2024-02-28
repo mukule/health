@@ -391,6 +391,18 @@
 
 
 
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var footerTextElement = document.getElementById("footerText");
+
+        // Get the current year
+        var currentYear = new Date().getFullYear();
+
+        // Set the current year and text in the element
+        footerTextElement.innerHTML = currentYear + " © Health Today";
+    });
+</script>
+
 
 
 </body>
