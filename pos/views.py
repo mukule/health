@@ -6,7 +6,7 @@ from django.http import HttpResponse
 import subprocess
 from PIL import Image as PILImage
 from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.platypus import *
 from reportlab.lib.pagesizes import letter
 from users.decorators import *
 from datetime import datetime, timedelta
@@ -32,8 +32,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import FileResponse
 from reportlab.pdfgen import canvas
 import io
-import usb.core
-from escpos.printer import Usb
+from django.core.mail import *
 from reportlab.platypus import Table, TableStyle
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
@@ -47,6 +46,31 @@ from django.conf import settings
 from barcode import generate
 from barcode.writer import ImageWriter
 receipts_storage = FileSystemStorage(location=settings.MEDIA_ROOT)
+
+
+@login_required
+def create_notification(request):
+    if request.method == 'POST':
+        form = NotificationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('pos:mails')
+    else:
+        form = NotificationForm()
+
+    return render(request, 'pos/create_mails.html', {'form': form})
+
+@login_required
+def mails(request):
+ 
+    notifications = Notification.objects.all()
+
+  
+    context = {'notifications': notifications}
+
+    
+    return render(request, 'pos/mails.html', context)
+
 
 
 @login_required
@@ -356,7 +380,7 @@ def update_discount(request):
                 messages.error(
                     request, 'Please provide a valid discount value.')
 
-    # Handle GET requests (display the form to update the discount)
+   
     return render(request, 'pos/index.html')
 
 
@@ -365,12 +389,12 @@ def update_discount(request):
 def increment_cart_item(request, item_id):
     cart_item = get_object_or_404(CartItem, id=item_id)
 
-    # Check if incrementing the quantity exceeds the product's available quantity
+   
     if cart_item.quantity < cart_item.product.quantity:
         cart_item.quantity += 1
         cart_item.save()
     else:
-        # If incrementing is not allowed, show an error message
+       
         messages.error(
             request, "Cannot increase quantity beyond available quantity.")
 
@@ -382,7 +406,7 @@ def increment_cart_item(request, item_id):
 def decrement_cart_item(request, item_id):
     cart_item = get_object_or_404(CartItem, id=item_id)
 
-    # Check if the quantity is greater than 1 before decrementing
+   
     if cart_item.quantity > 1:
         cart_item.quantity -= 1
         cart_item.save()
@@ -401,51 +425,62 @@ def remove_cart_item(request, item_id):
 @login_required
 @third
 def generate_pdf_receipt(sale, served_by_username):
-    # Create a file-like buffer to receive PDF data.
+   
     buffer = io.BytesIO()
 
-    # Define custom page width and height (adjust as needed)
-    page_width = 250  # Adjust the page width
+    
+    page_width = 250 
     page_height = 500
 
-    # Define the width of the receipt content (adjust as needed)
-    receipt_width = 200  # You can customize the width
+   
+    receipt_width = 200 
 
-    # Calculate the x-position for centering the text
+    
     x_centered = (page_width - receipt_width) / 2
 
-    # Calculate the x-position for left-aligned text with a small padding
+   
     x_left_aligned = 20
 
-    # Create the PDF object with custom page size (width x height)
+   
     p = canvas.Canvas(buffer, pagesize=(page_width, page_height))
 
-    # Add a logo to the header
+   
     logo_path = 'https://healthtoday.co.ke/wp-content/uploads/2023/03/cropped-Logo-232x77.png'
-    logo_width = 100  # Adjust the width of the logo
-    logo_height = 50  # Adjust the height of the logo
+    logo_width = 100  
+    logo_height = 50 
     x_centered_logo = (page_width - logo_width) / 2
     p.drawInlineImage(logo_path, x_centered_logo, page_height -
                       20 - logo_height, width=logo_width, height=logo_height)
 
-    # Set the font and font size for the shop details
+    
+    heading_text = "Health Today"
+    heading_font_size = 16
+    heading_y_position = page_height - 15 - logo_height - heading_font_size - 5
+
+   
+    p.setFont("Helvetica-Bold", heading_font_size)
+
+    
+    p.drawCentredString(page_width / 2, heading_y_position, heading_text)
+
+    
     p.setFont("Helvetica", 10)
 
-    # Define the content for shop address, sale date, PIN, and sale ID (customize as needed)
+    
     shop_address = "St Ellis Building, City Hall Way, Nairobi"
     contact = "+254794085329 | info@healthtoday.co.ke "
     sale_date = sale.sale_date.strftime("Date: %Y-%m-%d %H:%M:%S")
     shop_pin = "Shop PIN: P0513834130"
     sale_id = f"CASH SALE: {sale.id:04d}"
 
-    # Calculate the y-positions for other content
+   
     address_y_position = page_height - 100
     contact_y_position = address_y_position - 15
     date_y_position = contact_y_position - 15
     pin_y_position = date_y_position - 15
     sale_id_y_position = pin_y_position - 15
 
-    # Draw the shop details aligned to the left with padding
+   
     draw_left_aligned_text(p, shop_address, x_left_aligned,
                            address_y_position, "Helvetica", 10)
     draw_left_aligned_text(p, contact, x_left_aligned,
@@ -457,71 +492,71 @@ def generate_pdf_receipt(sale, served_by_username):
     draw_left_aligned_text(p, sale_id, x_left_aligned,
                            sale_id_y_position, "Helvetica", 10)
 
-    # Draw double-dotted lines below the details
+   
     dotted_line_y_position = sale_id_y_position - 10
-    p.setDash(3, 3)  # Set the dash pattern for the lines
+    p.setDash(3, 3)  
     p.line(x_left_aligned, dotted_line_y_position,
            x_left_aligned + receipt_width, dotted_line_y_position)
 
-    # Set the font and font size for sales details headers
-    p.setFont("Helvetica", 10)  # No longer bold
+    
+    p.setFont("Helvetica", 10) 
 
-    # headers
+    
     sales_details = [
         ["Item", "Price", "Amount"]
     ]
 
-    # data
+    
     for sale_item in SaleItem.objects.filter(sale=sale):
         product_name = sale_item.product.title
         unit_price = sale_item.unit_price
         quantity = sale_item.quantity_sold
         total_price = sale_item.quantity_sold * unit_price
 
-        # Add the item, price, and the total amount to the detail
+        
         detail = [product_name, "", ""]
 
         sales_details.append(detail)
 
-        # Add the "1 x 300.00" line below the item
+        
         detail_quantity = [f"{quantity} x",
                            f"{unit_price:.2f}", f"{total_price:.2f}"]
         sales_details.append(detail_quantity)
 
-    # Calculate the y-position for sales details
+    
     sales_details_y_position = dotted_line_y_position - 25
 
-    # Create the table without grid lines
+    
     table = Table(sales_details, colWidths=[90, 40, 50], rowHeights=15)
     table.setStyle(TableStyle([
-        # Add left padding to align contents to the left
+       
         ('LEFTPADDING', (0, 0), (-1, -1), 10),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),  # Align text to the left
-        # Text color for the first row (headers)
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),  
+        
         ('TEXTCOLOR', (0, 0), (-1, 0), (0, 0, 0)),
     ]))
 
-    # Calculate the position to align the table to the left
+    
     table_x_position = x_left_aligned
 
-    # Calculate the total height of the table
-    table_height = len(sales_details) * 15  # Assuming row height is 15
+    
+    table_height = len(sales_details) * 15  
 
-    # Adjust the position to ensure it doesn't go beyond the page
+    
     if sales_details_y_position - table_height < 0:
         sales_details_y_position = table_height
 
-    # Draw the table aligned to the left
+    
     table.wrapOn(p, page_width, page_height)
     table.drawOn(p, table_x_position, sales_details_y_position - table_height)
 
-    # Calculate positions for "Total VAT," "Total Payable," and "Total Paid"
+    
     total_vat_y_position = sales_details_y_position - table_height - 25
     total_payable_y_position = total_vat_y_position - 15
     discount_y_position = total_payable_y_position - 15
     total_paid_y_position = discount_y_position - 15
 
-    # Add text for "Total VAT," "Total Payable," and "Total Paid" from the Sale model
+    
     total_vat_text = f"VAT: {sale.vat:.2f}"
     total_payable_text = f"Total: {sale.total_amount:.2f}"
     discount_text = f"Discount: {sale.discount:.2f}"
@@ -536,36 +571,36 @@ def generate_pdf_receipt(sale, served_by_username):
     draw_left_aligned_text(p, total_paid_text, x_left_aligned,
                            total_paid_y_position, "Helvetica", 10)
 
-    # Draw double-dotted lines below the totals
-    p.setDash(3, 3)  # Set the dash pattern for the lines
+    
+    p.setDash(3, 3)  
     p.line(x_left_aligned, total_paid_y_position - 10,
            x_left_aligned + receipt_width, total_paid_y_position - 10)
 
-    # Add a line for "You were served by"
+    
     served_by_y_position = total_paid_y_position - 20
     draw_left_aligned_text(
         p, f"You were served by: {served_by_username}", x_left_aligned, served_by_y_position, "Helvetica", 10)
 
-    # Generate a barcode for the sale ID
+    
     formatted_sale_id = f"{sale.id:04d}"
 
-    # Generate a barcode image using the formatted sale ID
+    
     barcode_image = generateBarcodeImage(formatted_sale_id)
 
-    # Calculate the x-position for centering the barcode within the receipt width
-    barcode_width = 100  # Adjust the width as needed
+    
+    barcode_width = 100  
     barcode_x_position = x_centered + (receipt_width - barcode_width) / 2
-    barcode_y_position = served_by_y_position - 60  # Adjust as needed
+    barcode_y_position = served_by_y_position - 60  
 
-    # Draw the barcode on the PDF
+    
     p.drawImage(barcode_image, barcode_x_position,
                 barcode_y_position, width=barcode_width, height=50)
 
-    # Close the PDF object cleanly, and we're done.
+    
     p.showPage()
     p.save()
 
-  # Reset the buffer for reading
+  
     buffer.seek(0)
 
     # Create a response
@@ -574,31 +609,56 @@ def generate_pdf_receipt(sale, served_by_username):
 
     return response
 
-
-# Function to draw left-aligned text
 def draw_left_aligned_text(pdf_canvas, text, x_position, y_position, font_name, font_size):
     pdf_canvas.setFont(font_name, font_size)
     pdf_canvas.drawString(x_position, y_position, text)
 
 
 def generateBarcodeImage(data):
-    # Generate a barcode image using the Python barcode library
+   
     barcode = generate('Code128', str(
         data), writer=ImageWriter(), output='barcode_image')
     return barcode
 
+def send_checkout_notification(user, sale):
+    subject = 'New Sale Completed'
+    
+    # Collect products sold in a comma-separated string
+    products_sold = ', '.join([item.product.title for item in sale.saleitem_set.all()])
+
+    message = (
+        f"Sale Details:\n\n"
+        f"Sale ID: {sale.id}\n"
+        f"Products Sold: {products_sold}\n"
+        f"Total Amount: {sale.total_amount}\n"
+        f"Discount: {sale.discount}\n"
+        f"VAT: {sale.vat}\n"
+        f"Total Paid: {sale.total_paid}\n"
+        f"Sale Date: {sale.sale_date}\n"
+        f"Sold By: {sale.user.username}\n"
+    )
+
+    sender_email = 'nelson@kenyaweb.co.ke'
+    custom_recipient_email = 'nelson.masibo@kenyaweb.com'  # Replace with your custom recipient email address
+    cc_email = 'nelsonmasibo6@gmail.com'  # Replace with your CC email address
+
+    # Create EmailMessage instance
+    email = EmailMessage(subject, message, sender_email, [custom_recipient_email], cc=[cc_email])
+
+    # Send the email
+    email.send(fail_silently=False)
 
 @login_required
 @third
 @transaction.atomic
 def checkout(request):
     try:
-        # Retrieve the user's cart
+      
         user_cart = get_object_or_404(Cart, user=request.user)
 
-        # Check if the cart is not empty
+       
         if user_cart.products.exists():
-            # Calculate VAT based on your business logic (e.g., 16% VAT)
+          
             if user_cart.add_vat:
                 vat_rate = Decimal(0.16)  # 16% VAT
                 vat_amount = user_cart.total_cost * vat_rate
@@ -645,6 +705,7 @@ def checkout(request):
             user_cart.total_cost = 0
             user_cart.discount = 0
             user_cart.save()
+            send_checkout_notification(request.user, sale)
 
             # Update the Day model for the current day
             sale_date = sale.sale_date.date()
@@ -658,6 +719,8 @@ def checkout(request):
             current_day.sales.add(sale)
             current_day.sales_amount += sale.total_amount
             current_day.save()
+
+
 
             # Generate the PDF receipt
 
