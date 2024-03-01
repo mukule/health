@@ -46,19 +46,24 @@ from django.conf import settings
 from barcode import generate
 from barcode.writer import ImageWriter
 receipts_storage = FileSystemStorage(location=settings.MEDIA_ROOT)
+from pos.models import *
 
 
 @login_required
-def create_notification(request):
+def create_mail(request):
+   
+    existing_instance = Notification.objects.first()
+
     if request.method == 'POST':
-        form = NotificationForm(request.POST)
+        form = NotificationForm(request.POST, instance=existing_instance)
         if form.is_valid():
             form.save()
             return redirect('pos:mails')
     else:
-        form = NotificationForm()
+     
+        form = NotificationForm(instance=existing_instance)
 
-    return render(request, 'pos/create_mails.html', {'form': form})
+    return render(request, 'pos/create_mails.html', {'form': form, 'existing': existing_instance})
 
 @login_required
 def mails(request):
@@ -76,20 +81,20 @@ def mails(request):
 @login_required
 @third
 def period(request):
-    # Get the current year, month, and week number
+   
     current_date = timezone.now()
     current_year = current_date.year
     current_month = current_date.month
     current_week_number = current_date.isocalendar()[1]
 
-    # Check if the current year exists in the Year model
+  
     year, created = Year.objects.get_or_create(year=current_year)
 
-    # Check if the current month exists in the Month model for the current year
+   
     month, created = Month.objects.get_or_create(
         year=year, month=current_month)
 
-    # Attempt to get the current week
+   
     try:
         current_week = Week.objects.get(
             month=month, week_number=current_week_number)
@@ -620,10 +625,23 @@ def generateBarcodeImage(data):
         data), writer=ImageWriter(), output='barcode_image')
     return barcode
 
+
 def send_checkout_notification(user, sale):
     subject = 'New Sale Completed'
-    
-    # Collect products sold in a comma-separated string
+
+    # Set default values
+    sender_email = 'nelson@kenyaweb.co.ke'
+    custom_recipient_email = 'nelson.masibo@kenyawebsolution.co.ke'
+    cc_email = 'kushdinesh98@gmail.com'
+
+    # Check if there is an instance of Notification
+    notification_instance = Notification.objects.first()
+
+    # If an instance exists, use its email and cc values as defaults
+    if notification_instance:
+        custom_recipient_email = notification_instance.receiver or custom_recipient_email
+        cc_email = notification_instance.cc or cc_email
+
     products_sold = ', '.join([item.product.title for item in sale.saleitem_set.all()])
 
     message = (
@@ -638,15 +656,14 @@ def send_checkout_notification(user, sale):
         f"Sold By: {sale.user.username}\n"
     )
 
-    sender_email = 'nelson@kenyaweb.co.ke'
-    custom_recipient_email = 'nelson.masibo@kenyaweb.com'  # Replace with your custom recipient email address
-    cc_email = 'nelsonmasibo6@gmail.com'  # Replace with your CC email address
-
-    # Create EmailMessage instance
     email = EmailMessage(subject, message, sender_email, [custom_recipient_email], cc=[cc_email])
 
-    # Send the email
-    email.send(fail_silently=False)
+    try:
+        email.send(fail_silently=False)
+    except Exception as e:
+        print(f"Failed to send notification email: {e}")
+
+
 
 @login_required
 @third
@@ -705,7 +722,9 @@ def checkout(request):
             user_cart.total_cost = 0
             user_cart.discount = 0
             user_cart.save()
+
             send_checkout_notification(request.user, sale)
+           
 
             # Update the Day model for the current day
             sale_date = sale.sale_date.date()

@@ -28,4 +28,5 @@ urlpatterns = [
      path('cataloque/<int:cataloque_id>/', views.cataloque_detail, name='cataloque_detail'),
      path('export_cataloque/<int:cataloque_id>/', views.export_cataloque, name='export_cataloque'),
       path('eshop/mails/', views.mails, name='mails'),
+       path('eshop/create_mails/', views.create_mail, name='create_mails'),
 ]

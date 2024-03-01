@@ -7,7 +7,7 @@
         <div class="row">
             <div class="col-12">
                 <div class="page-title-box d-flex align-items-center justify-content-between">
-                    <h4 class="mb-0 font-size-18">Products Received</h4>
+                    <h4 class="mb-0 font-size-18">Notification Email</h4>
                 </div>
             </div>
         </div>  
@@ -16,20 +16,27 @@
             <div class="col-xl-12">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title mb-4">Mails</h4>
+                       
         
                         {% if notifications %}
-                        <ul>
+                       
+                        <div class="alert alert-info text-center" role="alert">
                             {% for notification in notifications %}
-                                <li>{{ notification.receiver }}{% if notification.cc %} (CC: {{ notification.cc }}){% endif %}</li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p>No notifications available.</p>
-                    {% endif %}
+                            {{ notification.receiver }}{% if notification.cc %} (CC: {{ notification.cc }}){% endif %}
+                        {% endfor %}
+                          </div>
+
                         <div class="text-center mt-3">
-                            <a href="{% url 'product:receivings' %}" class="btn btn-primary">Receive Products</a>
+                            <a href="{% url 'pos:create_mails' %}" class="btn btn-primary">Update Notification Mails</a>
                         </div>
+                    {% else %}
+                        
+                        <div class="text-center mt-3">
+                            <p>No Email available.</p>
+                            <a href="{% url 'pos:create_mails' %}" class="btn btn-primary">Add Notification Mails</a>
+                        </div>
+                    {% endif %}
+                       
                     </div>
                     <!-- end card-body-->
                 </div>
