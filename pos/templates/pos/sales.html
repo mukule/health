@@ -38,7 +38,7 @@
                                     {% for sale in sales %}
                                         <tr>
                                             <td>{{ sale.user.username }}</td>
-                                            <td><a href="{% url 'pos:sale' sale.id %}">Ksh {{ sale.total_amount }}</a></td>
+                                            <td><a href="{% url 'pos:sale' sale.id %}">Ksh {{ sale.total_paid }}</a></td>
                                             <td>{{ sale.sale_date }}</td>
                                         </tr>
                                     {% empty %}
