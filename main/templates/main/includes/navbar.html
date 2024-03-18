@@ -1,42 +1,5 @@
 {% load static %}
-<header id="page-topbar">
-    <div class="navbar-header">
-        <!-- LOGO -->
-        <div class="navbar-brand-box d-flex align-items-left">
-            <div class="navbar-brand-box d-flex align-items-left">
-                <a href="/" class="logo">
-                   <img src="{% static 'main/images/logo.png' %}" alt="logo">
-                </a>
-            </div>
 
-         
-        </div>
-
-        <div class="d-flex align-items-center">
-            {% if user.is_authenticated %}
-            <div class="dropdown d-inline-block">
-                <button type="button" class="btn header-item waves-effect waves-light" id="page-header-user-dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <span class="d-none d-sm-inline-block ml-1"><b>{{ user.username }} ({% if user.access_level == 1%} Super User {%elif user.access_level == 2%} Shop Manager {%elif user.access_level == 3 %}
-                        Cashier {%else%}Unknown user{%endif%})
-                    </b></span>
-                    <i class="mdi mdi-chevron-down d-none d-sm-inline-block"></i>
-                </button>
-                <div class="dropdown-menu dropdown-menu-right">
-                    <!-- item-->
-                    <a href="{% url 'users:logout' %}" class="dropdown-item notify-item">
-                        <span class="align-middle">Logout</span>
-                    </a>
-                </div>
-            </div>
-            {% endif %}
-        
-            <button type="button" class="btn btn-sm mr-2 font-size-16 d-lg-none header-item waves-effect waves-light" data-toggle="collapse" data-target="#topnav-menu-content">
-                <i class="fa fa-fw fa-bars"></i>
-            </button>
-        </div>
-        
-    </div>
-</header>
 
 
 <div class="topnav">
@@ -45,6 +8,11 @@
             <div class="mx-auto collapse navbar-collapse" id="topnav-menu-content" style="justify-content: center;">
                 {% if user.is_authenticated %}
                 <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'main:index' %}">
+                            Home
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'pos:menu' %}">
                             Inventory
@@ -91,6 +59,9 @@
                 
                 {% endif %}
             </div>
+
+           
+            
         </nav>
     </div>
 </div>

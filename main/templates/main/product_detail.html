@@ -1,0 +1,147 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+  
+<style>
+    @keyframes zoom {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.2);
+        }
+    }
+</style>
+<div class="container-fluid">
+    <div class="col-md-12">
+        <div class="card mt-2">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 col-12 d-flex justify-content-center align-items-center">
+                        <div class="navbar-brand-box d-flex">
+                            <a href="/" class="logo">
+                                <img src="{% static 'main/images/logo.png' %}" alt="logo">
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-12">
+                        <form method="GET" class="mt-4">
+                            <div class="d-flex">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                    </div>
+                                    <input type="text" name="title" class="form-control form-control-lg" placeholder="Search Products Brands and Categories">
+                                </div>
+                                <button type="submit" class="btn btn-primary ml-2">Search</button>
+                            </div>
+                        </form>
+                        {% if request.GET.title %}
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                <a href="{% url 'main:index' %}" class="btn btn-primary">Show All</a>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-2 col-12 d-flex justify-content-center align-items-center">
+                        <div class="d-flex align-items-center justify-content-center">
+                            {% if user.is_authenticated %}
+                            <div class="dropdown d-inline-block">
+                                <button type="button" class="btn btn-primary p-2" id="page-header-user-dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <i class="fas fa-user"></i>  Account<!-- User icon -->
+                                    
+                                    <i class="mdi mdi-chevron-down d-none d-sm-inline-block"></i>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <span class="d-none d-sm-inline-block">{{ user.username }} ({% if user.access_level == 1%} Super User {%elif user.access_level == 2%} Shop Manager {%elif user.access_level == 3 %}
+                                        Cashier {%else%}Unknown user{%endif%})
+                                    </span>
+                                    <!-- item-->
+                                    <a href="{% url 'users:logout' %}" class="dropdown-item notify-item">
+                                        <span class="align-middle">Logout</span>
+                                    </a>
+                                </div>
+                            </div>
+                            {% else %}
+                           <a href=" {% url 'users:login' %}">
+                            <i class="fas fa-user ml-2"></i> SIGN IN <!-- User icon -->
+                           </a>
+                            {% endif %}
+                            <button type="button" class="btn btn-sm mr-2 font-size-16 d-lg-none header-item waves-effect waves-light" data-toggle="collapse" data-target="#topnav-menu-content">
+                                <i class="fa fa-fw fa-bars"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-3 mb-4">
+       
+        <div class="col-md-4">
+            <!-- Product Image -->
+            <img src="{{ product.image.url }}" class="img-fluid" alt="{{ product.name }}">
+        </div>
+        <div class="col-md-8">
+            <!-- Product Details -->
+            <h2>{{ product.title }}</h2>
+            <!-- Display Brand if not null -->
+            {% if product.brand %}
+                <p><strong>Brand:</strong> {{ product.brand }}</p>
+            {% endif %}
+            <!-- Display Units if not null -->
+            {% if product.units %}
+                <p><strong>Units:</strong> {{ product.units }}</p>
+            {% endif %}
+            <p><strong>Price:</strong> Ksh {{ product.price }}</p>
+            {% if product.quantity > 0 %}
+                <p><strong>Available Quantity:</strong> {{ product.quantity }}</p>
+            {% else %}
+                <p class="text-danger"><strong>Status:</strong> Out of Stock</p>
+            {% endif %}
+           
+            <a href="https://wa.me/+254794085329?text=Is%20the%20{{ product.title }}%20available%3F" class="btn btn-primary" target="_blank">
+                <i class="fab fa-whatsapp"></i> Make an Order
+            </a>
+        </div>
+    </div>
+    {% if other_products %}
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Related Products</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for related_product in other_products %}
+                            <div class="col-md-3 mb-3">
+                                <a href="{% url 'main:product_detail' related_product.id %}">
+                                    <div class="card">
+                                        <img src="{{ related_product.image.url }}" class="card-img-top" alt="{{ related_product.name }}" style="height: 168px; object-fit: cover;">
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ related_product.title }}</h5>
+                                            <p class="card-text">Price: Ksh {{ related_product.price }}</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        {% empty %}
+                            <div class="col-12">
+                                <p>No related products available</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+</div>
+{% endblock content %}

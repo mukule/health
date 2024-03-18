@@ -31,15 +31,23 @@ def index(request):
         products_list = products_list.filter(title__icontains=title_filter)
 
     paginator = Paginator(products_list, 9)
-    page = request.GET.get('page')
+    page_number = request.GET.get('page')
 
     try:
-        products = paginator.page(page)
+        products = paginator.page(page_number)
     except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
         products = paginator.page(1)
     except EmptyPage:
-
+        # If page is out of range (e.g. 9999), deliver last page of results.
         products = paginator.page(paginator.num_pages)
+
+    # Prefetch related products for each category to avoid multiple database queries
+    categories_with_products = []
+    for category in categories:
+        category_products = products_list.filter(category=category)
+        categories_with_products.append(
+            {'category': category, 'products': category_products})
 
     slider1 = Promotion.objects.all()
     slider2 = Product.objects.order_by('-price')[:5]
@@ -54,9 +62,27 @@ def index(request):
         'selected_category': selected_category,
         'about': about,
         'ap': available_products,
+        'categories_with_products': categories_with_products,  # Add this to context
     }
 
     return render(request, 'main/index.html', context)
+
+
+def product_detail(request, product_id):
+    # Retrieve product object or return 404 error if not found
+    product = get_object_or_404(Product, pk=product_id)
+
+    # Retrieve the category of the product
+    category = product.category
+
+    # Retrieve other products in the same category excluding the current product
+    other_products = Product.objects.filter(
+        category=category).exclude(pk=product_id)
+
+    print(other_products)
+
+    # Render template with product details and other products in the same category
+    return render(request, 'main/product_detail.html', {'product': product, 'other_products': other_products})
 
 
 @login_required
