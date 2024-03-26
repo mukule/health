@@ -4,53 +4,107 @@
 
 {% block content %}
 <div class="page-content">
-    <div class="container-fluid">
+    <div class="container-fluid-lg">
         <div class="row justify-content-center">
-            <div class="col-md-8 col-lg-8">
+            <div class="col-md-12 col-lg-12">
                 <div class="card shadow-lg p-3 mb-5 bg-white rounded">
                     <div class="card-body">
-                        <h2 class="card-title text-center">Add New Product</h2>
-                        <form method="post" enctype="multipart/form-data">
+                        <h2 class="card-title text-center mb-4" style="color: #F5772B;">Add New Product</h2>
+                        <form method="post" enctype="multipart/form-data" class="mt-2">
                             {% csrf_token %}
                             <div class="row">
-                                <div class="col-md-4">
-                                    {{ form.title|as_crispy_field }}
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <label for="id_title" class="col-md-4 col-form-label text-md-right">Product Name</label>
+                                        <div class="col-md-8">
+                                            {{ form.title|as_crispy_field }}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-md-4">
-                                    {{ form.product_code|as_crispy_field }}
-                                </div>
-                                <div class="col-md-4">
-                                    {{ form.brand|as_crispy_field }}
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-4">
-                                    {{ form.category|as_crispy_field }}
-                                </div>
-                                <div class="col-md-4">
-                                    {{ form.units|as_crispy_field }}
-                                </div>
-                                <div class="col-md-4">
-                                    {{ form.quantity|as_crispy_field }}
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <label for="id_product_code" class="col-md-4 col-form-label text-md-right">Product Code</label>
+                                        <div class="col-md-8">
+                                            {{ form.product_code|as_crispy_field }}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-md-4">
-                                    {{ form.price|as_crispy_field }}
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <label for="id_brand" class="col-md-4 col-form-label text-md-right">Product Brand</label>
+                                        <div class="col-md-8">
+                                            {{ form.brand|as_crispy_field }}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-md-4">
-                                    {{ form.min_price|as_crispy_field }}
-                                </div>
-                                <div class="col-md-4">
-                                    {{ form.expiry_date|as_crispy_field }}
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <label for="id_category" class="col-md-4 col-form-label text-md-right">Product Category</label>
+                                        <div class="col-md-8">
+                                            {{ form.category|as_crispy_field }}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-md-12">
-                                    {{ form.image|as_crispy_field }}
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <label for="id_units" class="col-md-4 col-form-label text-md-right">Product Units</label>
+                                        <div class="col-md-8">
+                                            {{ form.units|as_crispy_field }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <label for="id_quantity" class="col-md-4 col-form-label text-md-right">Product Quantity</label>
+                                        <div class="col-md-8">
+                                            {{ form.quantity|as_crispy_field }}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-primary btn-block">Add Product</button>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <label for="id_price" class="col-md-4 col-form-label text-md-right">Product Selling Price</label>
+                                        <div class="col-md-8">
+                                            {{ form.price|as_crispy_field }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <label for="id_min_price" class="col-md-4 col-form-label text-md-right">Product Min Price</label>
+                                        <div class="col-md-8">
+                                            {{ form.min_price|as_crispy_field }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <label for="id_expiry_date" class="col-md-4 col-form-label text-md-right">Product Expiry Date</label>
+                                        <div class="col-md-8">
+                                            {{ form.expiry_date|as_crispy_field }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group row">
+                                        <label for="id_expiry_date" class="col-md-4 col-form-label text-md-right">Product Display Image</label>
+                                        <div class="col-md-8">
+                                            {{ form.image|as_crispy_field }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row justify-content-center">
+                                <button type="submit" class="btn btn-primary">Submit Product</button>
+                            </div>
                         </form>
                     </div>
                 </div>

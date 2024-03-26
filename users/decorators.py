@@ -24,7 +24,8 @@ def user_not_authenticated(function=None, redirect_url='/'):
 
 def first(view_func):
     def _wrapped_view(request, *args, **kwargs):
-        if request.user.access_level == 1:  # Assuming 1 corresponds to Admin
+        if request.user.is_superuser or request.user.access_level == 1:
+            # Superuser or user with access_level 1 (Admin)
             return view_func(request, *args, **kwargs)
         else:
             return HttpResponseForbidden(render(request, 'users/not_allowed.html'))

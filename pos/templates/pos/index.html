@@ -12,7 +12,7 @@
                         <!-- Filter Form -->
                         <form method="GET">
                             <div class="form-group row justify-content-center align-items-center">
-                                <div class="col-12 col-md-5 mb-3">
+                                <div class="col-12 col-md-4 mb-3">
                                     <select name="category" class="custom-select form-control custom-select-lg shadow-lg border-0" style="border-radius: 25px;">
                                         <option value="">Select Category</option>
                                         {% for category in categories %}
@@ -20,11 +20,14 @@
                                         {% endfor %}
                                     </select>
                                 </div>
-                                <div class="col-12 col-md-5 mb-3">
+                                <div class="col-12 col-md-4 mb-3">
                                     <input type="text" name="title" class="form-control form-control-lg shadow-lg border-0" placeholder="Product Name" style="border-radius: 25px;">
                                 </div>
                                 <div class="col-12 col-md-2 mb-3">
-                                    <button type="submit" class="btn btn-primary btn-lg btn-block shadow-lg" style="border-radius: 25px;">Enter</button>
+                                    <button type="submit" class="btn btn-primary btn-lg btn-block shadow-lg" style="border-radius: 25px;">Search</button>
+                                </div>
+                                <div class="col-12 col-md-2 mb-3">
+                                    <a class="btn btn-primary btn-lg btn-block shadow-lg" style="border-radius: 25px;" href="{% url 'pos:cashup' %}">Cash up</a>
                                 </div>
                             </div>
                         </form>

@@ -3,31 +3,27 @@
 
 {% block content %}
 <div class="page-content">
-    <div class="container-fluid">
+    <div class="container-fluid-lg">
         <div class="row">
             <div class="col-12">
-                <div class="page-title-box d-flex align-items-center justify-content-between">
-                    <h4 class="mb-0 font-size-18"> Stock take ID: {{stock.id}} taken on {{stock.stock_date}}</h4>
+                <div class="page-title-box d-flex align-items-center justify-content-center" >
+                    <h4 class="mb-0 font-size-18" style="color: #F5772B;"> Stock take ID: {{stock.id}} taken on {{stock.stock_date}}</h4>
                 </div>
             </div>
         </div>  
         
-        <div class="row">
-            <div class="col-xl-12">
+        <div class="row justify-content-center">
+            <div class="col-xl-12 justify-content-center">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title mb-4"> All products to be updated</h4>
+                        <h4 class="card-title mb-4 text-center" style="color: #F5772B;"> All products to be updated</h4>
                         
                         <div class="mb-3">
                             <div class="row text-center">
-                                <div class="col-md-6">
+                                <div class="col-md-12">
                                     <div class="form-row">
-                                        <div class="col-md-6">
-                                            <label for="searchInput" class="form-label">Search by Product Title:</label>
-                                   
-                                        </div>
-                                        <div class="col-md-6">
-                                            <input type="text" class="form-control" id="searchInput" placeholder="Enter product title">
+                                        <div class="col-md-12">
+                                            <input type="text" class="form-control" id="searchInput" placeholder="Enter product title/Name">
                                         </div>
                                     </div>
                                 </div>
@@ -38,7 +34,7 @@
                             <table class="table mb-0" id="stockTable">
                                 <thead>
                                     <tr>
-                                        <th>ID</th>
+                                        <th>#</th>
                                         <th>Product</th>
                                         <th>Category</th>
                                         <th>unit</th>
@@ -48,9 +44,9 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for stock_take_item in stock.stocktakeitem_set.all %}
+                                    {% for stock_take_item in stock_take_items %}
                                     <tr>
-                                        <td>{{ stock_take_item.product.id }}</td>
+                                        <td>{{ forloop.counter }}</td>
                                         <td>{{ stock_take_item.product.title }}</td>
                                         <td>{{ stock_take_item.product.category }}</td>
                                         <td>{{ stock_take_item.product.units }}</td>
@@ -58,7 +54,8 @@
                                         <td>{{ stock_take_item.quantity_counted }}</td>
                                         <td><a href="{% url 'product:update_stock' stock.id stock_take_item.id %}">Update product Counts</a></td>
                                     </tr>
-                                    {% endfor %}
+                                {% endfor %}
+                                
                                 </tbody>
                             </table>
                         </div>

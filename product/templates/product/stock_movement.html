@@ -3,22 +3,23 @@
 
 {% block content %}
 <div class="page-content">
-    <div class="container-fluid">
+    <div class="container-fluid-lg">
         <div class="row">
             <div class="col-12">
-                <div class="page-title-box d-flex align-items-center justify-content-between">
-                    <h4 class="mb-0 font-size-18">Stock Movement</h4>
+                <div class="page-title-box d-flex align-items-center justify-content-center">
+                    <h4 class="mb-0 font-size-18" style="color: #F5772B;">Stock Movement</h4>
                 </div>
             </div>
         </div>
 
-        <div class="row">
+        <div class="row justify-content-center">
             <div class="col-xl-12">
-                <div class="card">
+                <div class="card text-center">
                     <div class="card-body">
-                        <h4 class="card-title mb-4">Stock Movement</h4>
+                        <h4 class="card-title mb-4" style="color: #F5772B;">Stock Movement</h4>
+                        <p class="card-subtitle mb-4" style="color: #F5772B;">Track the sales of a products within Specific Dates</p>
                         <form method="GET" action="{% url 'product:stock_movement' %}">
-                            <div class="row mb-3">
+                            <div class="row mb-3 justify-content-center">
                                 <div class="col-md-4">
                                     <label for="start_date" class="form-label">Start Date</label>
                                     <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
@@ -27,10 +28,11 @@
                                     <label for="end_date" class="form-label">End Date</label>
                                     <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
                                 </div>
-                                <div class="col-md-4">
-                                    <button type="submit" class="btn btn-primary mt-4">Filter</button>
-                                </div>
+                                <button type="submit" class="btn btn-primary mt-4">Filter</button>
                             </div>
+                            
+                                   
+                              
                         </form>
                         <div class="table-responsive">
                             <table class="table mb-0">

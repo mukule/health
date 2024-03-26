@@ -39,16 +39,16 @@ class ProductForm(forms.ModelForm):
         }
 
         labels = {
-            'product_code': 'Product Code',
-            'title': 'Product Name',
-            'price': 'Product Price',
-            'min_price': 'Product Min Price',
-            'image': 'Product Display Image',
-            'category': 'Product Category',
-            'quantity': 'Quantity (number of products)',
-            'units': 'Units (e.g., 50gms)',
-            'brand': 'Product Brand',
-            'expiry_date': 'Expiry Date',
+            'product_code': '',
+            'title': '',
+            'price': '',
+            'min_price': '',
+            'image': '',
+            'category': '',
+            'quantity': '',
+            'units': '',
+            'brand': '',
+            'expiry_date': '',
         }
 
 

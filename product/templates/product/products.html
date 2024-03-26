@@ -3,19 +3,44 @@
 
 {% block content %}
 <div class="page-content">
-    <div class="container-fluid">
+    <div class="container-fluid-lg">
+       <div class="card">
+        <div class="card-body">
+            <div class="row justify-content-center">
+                <div class="col-md-3 text-center">
+                    <a href="{% url 'product:create_category' %}" class="btn btn-primary">Add Product Category</a>
+                </div>
+                <div class="col-md-6 text-center">
+                    <form method="GET" class="mb-3 ml-2">
+                        <div class="input-group">
+                            <input type="text" name="title" class="form-control form-control-lg" placeholder="Search Product Name">
+                            <div class="input-group-append">
+                                <button type="submit" class="btn btn-primary">Search</button>
+                            </div>
+                           
+                        </div>
+                    </form>
+    
+                    {% if request.GET.title %}
+                  
+                            <a href="{% url 'product:products' %}" class="btn btn-primary">Show All</a>
+                      
+                    {% endif %}
+    
+                </div>
+                <div class="col-md-3 text-center">
+                    <a href="{% url 'product:create_product' %}" class="btn btn-primary">Add New Product</a>
+                </div>
+            </div>
+        </div>
+       </div>
+        
         <div class="row">
             <div class="col-md-3">
-                <!-- Display Categories -->
+               <div class="card">
+                <div class="card-body">
+                     <!-- Display Categories -->
                 <h5 class="card-title"><b>Categories</b></h5>
-                <form method="GET" class="mb-3">
-                    <div class="input-group">
-                        <input type="text" name="title" class="form-control form-control-lg" placeholder="Search by title">
-                        <div class="input-group-append">
-                            <button type="submit" class="btn btn-primary">Search</button>
-                        </div>
-                    </div>
-                </form>
                 <ul class="list-group mb-4">
                     {% for category in categories %}
                     <li class="list-group-item">
@@ -29,26 +54,18 @@
                     <li class="list-group-item">No Categories Available</li>
                 {% endfor %}
                 </ul>
-               
-                
-                {% if request.GET.title %}
-                <div class="row">
-                    <div class="col-12 text-center">
-                        <a href="{% url 'product:products' %}" class="btn btn-primary">Show All</a>
-                    </div>
                 </div>
-                {% endif %}
+               </div>
                 
-                <div class="col-12 text-center mt-3">
-                    <a href="{% url 'product:create_category' %}" class="btn btn-primary">Add Product Category</a>
-                </div>
             </div>
             <div class="col-md-9">
-           
+           <div class="card">
+            <div class="card-body">
+                
                 <div class="row">
                     {% for product in products %}
                     <div class="col-md-4 mb-3">
-                        <div class="card">
+                        <div class="card border-0">
                             <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 168px; object-fit: cover;">
                             <div class="card-body">
                                 <h5 class="card-title">{{ product.title }}</h5>
@@ -105,9 +122,9 @@
                     </ul>
                 </div>
                 <!-- End of Pagination Links -->
-                <div class="col-12 text-center">
-                    <a href="{% url 'product:create_product' %}" class="btn btn-primary">Add Product</a>
-                </div>
+            </div>
+           </div>
+                
             </div>
         </div>
     </div>

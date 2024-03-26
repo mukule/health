@@ -3,11 +3,11 @@
 
 {% block content %}
 <div class="page-content">
-    <div class="container-fluid">
+    <div class="container-fluid-lg">
         <div class="row">
             <div class="col-12">
-                <div class="page-title-box d-flex align-items-center justify-content-between">
-                    <h4 class="mb-0 font-size-18">Stock Take History</h4>
+                <div class="page-title-box d-flex align-items-center justify-content-center">
+                    <h4 class="mb-0 font-size-18" style="color: #F5772B;">Stock Take History</h4>
 
                     
                 </div>
@@ -18,7 +18,7 @@
             <div class="col-xl-12">
                 <div class="card">
                     <div class="card-body alert-info">
-                        <h4 class="card-title mb-4">Select / Create stock to take action</h4>
+                        <h4 class="card-title mb-4 text-center" style="color: #F5772B;">Select / Create stock to take action</h4>
                         
                         <div class="table-responsive">
                             <table class="table mb-0">
@@ -28,7 +28,7 @@
                                         <th>Stock Date</th>
                                         <th>Stock taken by</th>
                                         <th>Products Counted</th>
-                                        <th>Stock Balanced</th>
+                                        <th>Stock status</th>
                                         <th>Stock Value</th>
                                         <th>Counted Value</th>
                                         <th>Difference</th>
@@ -44,15 +44,34 @@
                                             <td>{{ stock.stock_date }}</td>
                                             <td>{{ stock.user }}</td>
                                             <td>{{ stock.stocktakeitem_set.count }}</td>
-                                            <td>{{ stock.stock_balanced }}</td>
-                                            <td>{{ stock.stock_value }}</td>
-                                            <td>{{ stock.value }}</td>
-                                            <td>{{ stock.difference }}</td>
+                                            <td>
+                                                {% if stock.stock_balanced %}
+                                                <p class="text-success">Balanced</p>
+                                                {%else%}
+                                                <p class="text-danger">Negative</p>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-success">{{ stock.stock_value }}</td>
+                                            <td>
+                                                {% if stock.balanced%}
+                                                <p class="text-success">{{ stock.value }}</p>
+                                                {%else%}
+                                                <p class="text-danger">{{ stock.value }}</p>
+                                                {%endif%}
+                                            </td>
+                                            <td>
+                                                {% if stock.balanced %}
+                                                <p class="text-success">{{ stock.difference }}</p>
+                                                {% else %}
+                                                <p class="text-danger">{{ stock.difference }}</p>
+                                                {% endif %}
+                                            </td>
                                             <td><a href="{% url 'product:stock_detail' stock.id %}">Update counts</a></td>
                                             <td>
-                                                <a href="#" onclick="confirmUpdate()" class="btn btn-primary">Submit Stock</a>
+                                               
                                                 {% if user.is_authenticated and user.access_level == 1 %}
-                                                <a href="#" onclick="confirmDelete()" class="btn btn-danger">Delete</a>
+                                                <a href="#" onclick="confirmUpdate()" class="btn btn-primary">Submit Stock</a>
+                                                <a href="#" onclick="confirmDelete()" class="btn btn-danger ml-2">Delete</a>
                                             {% endif %}
                                             
                                             </td>

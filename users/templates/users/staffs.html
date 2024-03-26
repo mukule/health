@@ -19,7 +19,8 @@
                                         <th>Last Name</th>
                                         <th>Access Rights</th>
                                         <th>Date Created</th>
-                                        <th>Delete</th>
+                                        <th>Status</th> <!-- New column for status -->
+                                        <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -31,15 +32,19 @@
                                         <td>{{ staff.last_name }}</td>
                                         <td>{{ staff.get_access_level_display }}</td>
                                         <td>{{ staff.date_created }}</td>
+                                        <td>{% if staff.is_active %} Active {% else %} Inactive {% endif %}</td> <!-- Display active or inactive status -->
                                         <td>
-                                            <a href="{% url 'users:delete_user' user_id=staff.id %}">
+                                            <a href="{% url 'users:update_staff' user_id=staff.id %}" class="btn btn-primary">
+                                                <i class="fa fa-edit" aria-hidden="true"></i>
+                                            </a>
+                                            <a href="{% url 'users:delete_user' user_id=staff.id %}" class="btn btn-danger ml-2">
                                                 <i class="fa fa-trash" aria-hidden="true"></i>
                                             </a>
                                         </td>
                                     </tr>
                                     {% empty %}
                                     <tr>
-                                        <td colspan="7">No staffs available</td>
+                                        <td colspan="8">No staffs available</td> <!-- Adjust colspan for new column -->
                                     </tr>
                                     {% endfor %}
                                 </tbody>

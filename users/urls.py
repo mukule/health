@@ -18,5 +18,6 @@ urlpatterns = [
     path("staffs", views.staffs, name="staffs"),
     path('delete/<int:user_id>/', views.delete_user, name='delete_user'),
     path("not_allowed", views.not_allowed, name="not_allowed"),
+    path('update/<int:user_id>/', views.update_user, name='update_staff'),
 
 ]

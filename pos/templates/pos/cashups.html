@@ -1,0 +1,62 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .card {
+        height: 100%;
+    }
+
+    .card-body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+</style>
+
+<div class="page-content">
+    <div class="container">
+        <div class="row">
+           {% if cashups %}
+           {% for c in cashups %}
+           <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        
+                        <th>#</th>
+                        <th>Staff</th>
+                        <th>Opening Stock Value(ksh)</th>
+                        <th>Total Sales (ksh)</th>
+                        <th>Expenses (Ksh)</th>
+                        <th>Amount Closed with (Ksh)</th>
+                        <th>Clossing stock Value (Ksh)</th>
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                       
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ c.staff }}</td>
+                                <td>{{ c.stock_value_before_cashup }}</td>
+                                <td>{{ c.total_sales }}</td>
+                                <td>{{ c.expenses }}</td>
+                                <td>{{ c.cash_at_hand }}</td>
+                                <td>{{ c.stock_value_after_cashup }}</td>
+                            </tr>
+                   
+                </tbody>
+            </table>
+        </div>
+         {% endfor %}
+         {% else %}
+         <p class="card-title">No Cashups Yet</p>
+         {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock content %}

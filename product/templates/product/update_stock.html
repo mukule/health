@@ -3,27 +3,30 @@
 
 {% block content %}
 <div class="page-content">
-    <div class="container-fluid">
+    <div class="container-fluid-lg">
         <div class="row">
             <div class="col-12">
-                <div class="page-title-box d-flex align-items-center justify-content-between">
-                    <h4 class="mb-0 font-size-18"> Stock take ID :{{stock.id}} >> taken on {{stock.stock_date}} >> Product :{{stock_product}}</h4>
+                <div class="page-title-box d-flex align-items-center justify-content-center">
+                    <h4 class="mb-0 font-size-18" style="color: #F5772B;"> Stock take ID :{{stock.id}} >> taken on {{stock.stock_date}} >> Product :{{stock_product}}</h4>
                     
                 </div>
             </div>
         </div>  
         
-        <div class="row">
-            <div class="col-xl-12">
-                <div class="card">
+        <div class="row justify-content-center">
+            <div class="col-xl-12 justify-content-center">
+                <div class="card text-center">
                     <div class="card-body alert-info">
-                        <h4 class="card-title mb-4">Update the Quantities for {{stock_product}}</h4>
+                        <h4 class="card-title mb-4 text-center">Update the Quantities for {{stock_product}}</h4>
                         <form method="post">
                             {% csrf_token %}
                             {{ form.as_p }}
-                            <button type="submit">Update Quantity</button>
+                          <div class="row justify-content-center">
+                            <button type="submit" class="btn btn-primary">Update Quantity</button>
+                            <a href="{% url 'product:stock_detail' stock.id %}" class="btn btn-primary ml-2">Back to Stock Take Detail</a>
+                          </div>
                           </form>
-                          <a href="{% url 'product:stock_detail' stock.id %}">Back to Stock Take Detail</a>
+                         
                        
                         </div>
 

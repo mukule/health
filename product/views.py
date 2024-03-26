@@ -30,7 +30,6 @@ from django.http import JsonResponse
 import json
 
 
-
 @login_required
 @second
 def create_category(request):
@@ -269,13 +268,13 @@ def stocks(request):
 def stock_detail(request, stock_take_id):
     stock_take = get_object_or_404(StockTake, pk=stock_take_id)
 
-    # Retrieve all products associated with this stock take
-    products_in_stock_take = stock_take.products.all()
+    # Retrieve all products associated with this stock take and order by title
+    stock_take_items = stock_take.stocktakeitem_set.all().order_by('product__title')
 
     # Pass the stock take and products to the template for rendering
     return render(request, 'product/stock_detail.html', {
         'stock': stock_take,
-        'stock_products': products_in_stock_take,
+        'stock_take_items': stock_take_items,
     })
 
 
@@ -284,7 +283,7 @@ def delete_stock_take(request, stock_take_id):
 
     stock_take.delete()
 
-    return redirect('product:stocks') 
+    return redirect('product:stocks')
 
 
 @login_required
@@ -308,43 +307,43 @@ def update_stock_take(request, stock_take_id):
 @login_required
 @third
 def update_stock_take_item(request, stock_take_id, stock_take_item_id):
-    # Retrieve the specific StockTake and StockTakeItem instances
     stock_take = get_object_or_404(StockTake, pk=stock_take_id)
     stock_take_item = get_object_or_404(StockTakeItem, pk=stock_take_item_id)
 
+    all_stock_take_items = stock_take.stocktakeitem_set.all().order_by('product__title')
+
     if request.method == 'POST':
-        # Create a form for updating the quantity counted
         form = StockTakeItemUpdateForm(request.POST, instance=stock_take_item)
         if form.is_valid():
-            # Update and save the StockTakeItem
             form.save()
 
-            # Recalculate the value based on the updated StockTakeItem instances
-            updated_value = StockTakeItem.objects.filter(stock_take=stock_take).aggregate(
+            # Recalculate the total value based on all stock take items
+            total_value = StockTakeItem.objects.filter(stock_take=stock_take).aggregate(
                 total_value=Sum(F('quantity_counted') *
                                 F('product__price'), output_field=DecimalField())
             )['total_value'] or 0
 
-            # Update the value field in the StockTake model
-            stock_take.value = updated_value
+            # Update the stock take with the new total value
+            stock_take.value = total_value
 
             # Calculate the difference
-            stock_take.difference = stock_take.value - stock_take.stock_value
+            stock_take.difference = total_value - stock_take.stock_value
 
-            # Check if stock is balanced and update the stock_balanced field
-            if stock_take.value == stock_take.stock_value:
-                stock_take.stock_balanced = True
-            else:
-                stock_take.stock_balanced = False
+            # Check if the stock is balanced and update the stock_balanced field
+            stock_take.stock_balanced = (total_value == stock_take.stock_value)
 
-            # Save the changes to the StockTake model
             stock_take.save()
 
-            # Redirect to the stock take detail page or another appropriate URL
+            messages.success(request, 'Stock take item updated successfully.')
+
+            current_index = list(all_stock_take_items).index(stock_take_item)
+            if current_index + 1 < len(all_stock_take_items):
+                next_stock_take_item = all_stock_take_items[current_index + 1]
+                return redirect('product:update_stock', stock_take_id=stock_take.id, stock_take_item_id=next_stock_take_item.id)
+
             return redirect('product:stock_detail', stock_take_id=stock_take.id)
 
     else:
-        # Create a form for rendering
         form = StockTakeItemUpdateForm(instance=stock_take_item)
 
     context = {
@@ -417,12 +416,25 @@ def stock_movement(request):
 @login_required
 @second
 def suppliers(request):
+    # Retrieve all suppliers
     suppliers = Supplier.objects.all()
-    user = request.user
+
+    # Get the search query from the request GET parameters
+    title_query = request.GET.get('title')
+
+    # If there's a search query, filter suppliers based on it
+    if title_query:
+        suppliers = suppliers.filter(name__icontains=title_query) | \
+            suppliers.filter(category__name__icontains=title_query)
+
+    # Pass the suppliers and user (if logged in) to the template
     context = {
         'suppliers': suppliers,
-        'user': user
+        'user': request.user,
+        'query': title_query
     }
+
+    # Render the template with the context
     return render(request, 'product/suppliers.html', context)
 
 
@@ -638,6 +650,17 @@ def dispatch(request, product_id):
 @third
 def dispatches(request):
     dispatches_list = Dispatch.objects.all()
+
+    title_query = request.GET.get('title')
+
+    # If there's a search query, filter dispatches based on it
+    if title_query:
+        dispatches_list = Dispatch.objects.filter(
+            Q(destination__icontains=title_query) |
+            Q(reason__icontains=title_query) |
+            Q(product__title__icontains=title_query)
+        )
+
     return render(request, 'product/dispatches.html', {'dispatches_list': dispatches_list})
 
 
@@ -892,7 +915,8 @@ def stock_update(request, stocktake_id):
 
 def brands(request):
     # Get all unique brands from the Product model
-    brands = Product.objects.values('brand').exclude(brand__isnull=True).annotate(count=Count('brand'))
+    brands = Product.objects.values('brand').exclude(
+        brand__isnull=True).annotate(count=Count('brand'))
 
     # You can pass the brands data to the template
     context = {'brands': brands}

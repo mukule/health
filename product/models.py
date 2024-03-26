@@ -29,6 +29,7 @@ class Product(models.Model):
         return self.title
 
     class Meta:
+        ordering = ['title']
         constraints = [
             UniqueConstraint(
                 fields=['product_code'],
@@ -43,7 +44,6 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
-
 
 
 class Promotion(models.Model):
@@ -62,7 +62,6 @@ class Promotion(models.Model):
     class Meta:
         verbose_name = 'Promotion'
         verbose_name_plural = 'Promotions'
-
 
 
 class About(models.Model):
@@ -146,7 +145,8 @@ class Sale(models.Model):
         max_digits=10, decimal_places=2, default=0.0)
     sale_date = models.DateTimeField(default=timezone.now)
     buyer = models.ForeignKey(
-        Buyer, on_delete=models.SET_NULL, null=True, blank=True)  # Add buyer field
+        Buyer, on_delete=models.SET_NULL, null=True, blank=True)
+    cashed_up = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Sale by {self.user.username}"
@@ -304,3 +304,42 @@ class DispatchedProduct(models.Model):
 
     def __str__(self):
         return f"{self.dispatch.product.title} - {self.product_quantity} units"
+
+
+class Cashup(models.Model):
+    date = models.DateField(default=timezone.now().date())
+    datetime = models.DateTimeField(auto_now_add=True)
+    staff = models.ForeignKey(CustomUser,
+                              on_delete=models.SET_NULL,
+                              null=True,
+                              verbose_name='Staff'
+                              )
+    total_sales = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0.0,
+        verbose_name='Total Sales'
+    )
+    expenses = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0.0,
+        verbose_name='Expenses'
+    )
+    cash_at_hand = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0.0,
+        verbose_name='Cash at Hand'
+    )
+    stock_value_before_cashup = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0.0)
+    stock_value_after_cashup = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0.0)
+
+    class Meta:
+        verbose_name = 'Cashup'
+        verbose_name_plural = 'Cashups'
+
+    def __str__(self):
+        return f"Cashup for {self.datetime}"

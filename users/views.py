@@ -22,6 +22,7 @@ import random
 import string
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.decorators import login_required
+from users.forms import *
 
 
 def is_admin_or_superuser(user):
@@ -57,6 +58,34 @@ def register(request):
         request=request,
         template_name="users/register.html",
         context={"form": form}
+    )
+
+
+@login_required
+@user_passes_test(is_admin_or_superuser, login_url='users:not_authorized')
+def update_user(request, user_id):
+    # Retrieve the user instance
+    User = get_user_model()
+    user = get_object_or_404(User, id=user_id)
+
+    if request.method == "POST":
+        # Create a form instance and populate it with the current user's data
+        form = UserUpdateForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'User details updated successfully.')
+            return redirect('users:staffs')
+        else:
+            for error in form.errors.values():
+                messages.error(request, error)
+    else:
+        # Create a form instance and populate it with the current user's data
+        form = UserUpdateForm(instance=user)
+
+    return render(
+        request=request,
+        template_name="users/update_staff.html",
+        context={"form": form, "user": user}
     )
 
 

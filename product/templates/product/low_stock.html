@@ -3,11 +3,11 @@
 
 {% block content %}
 <div class="page-content">
-    <div class="container-fluid">
+    <div class="container-fluid-lg">
         <div class="row">
             <div class="col-12">
-                <div class="page-title-box d-flex align-items-center justify-content-between">
-                    <h4 class="mb-0 font-size-18">Running out of stock</h4>
+                <div class="page-title-box d-flex align-items-center justify-content-center">
+                    <h4 class="mb-0 font-size-18" style="color: #F5772B;">Running out of stock</h4>
 
                     
                 </div>
@@ -18,7 +18,7 @@
             <div class="col-xl-12">
                 <div class="card">
                     <div class="card-body alert-info">
-                        <h4 class="card-title mb-4">{{ products_count }} Products needs attention</h4>
+                        <h4 class="card-title mb-4 text-center" style="color: #F5772B;">{{ products_count }} Products needs attention (They have quantities of less than 5 Products)</h4>
                         
                         <div class="table-responsive">
                             <table class="table mb-0">

@@ -46,12 +46,11 @@ from django.conf import settings
 from barcode import generate
 from barcode.writer import ImageWriter
 receipts_storage = FileSystemStorage(location=settings.MEDIA_ROOT)
-from pos.models import *
 
 
 @login_required
 def create_mail(request):
-   
+
     existing_instance = Notification.objects.first()
 
     if request.method == 'POST':
@@ -60,41 +59,36 @@ def create_mail(request):
             form.save()
             return redirect('pos:mails')
     else:
-     
+
         form = NotificationForm(instance=existing_instance)
 
     return render(request, 'pos/create_mails.html', {'form': form, 'existing': existing_instance})
 
+
 @login_required
 def mails(request):
- 
+
     notifications = Notification.objects.all()
 
-  
     context = {'notifications': notifications}
 
-    
     return render(request, 'pos/mails.html', context)
-
 
 
 @login_required
 @third
 def period(request):
-   
+
     current_date = timezone.now()
     current_year = current_date.year
     current_month = current_date.month
     current_week_number = current_date.isocalendar()[1]
 
-  
     year, created = Year.objects.get_or_create(year=current_year)
 
-   
     month, created = Month.objects.get_or_create(
         year=year, month=current_month)
 
-   
     try:
         current_week = Week.objects.get(
             month=month, week_number=current_week_number)
@@ -385,7 +379,6 @@ def update_discount(request):
                 messages.error(
                     request, 'Please provide a valid discount value.')
 
-   
     return render(request, 'pos/index.html')
 
 
@@ -394,12 +387,11 @@ def update_discount(request):
 def increment_cart_item(request, item_id):
     cart_item = get_object_or_404(CartItem, id=item_id)
 
-   
     if cart_item.quantity < cart_item.product.quantity:
         cart_item.quantity += 1
         cart_item.save()
     else:
-       
+
         messages.error(
             request, "Cannot increase quantity beyond available quantity.")
 
@@ -411,7 +403,6 @@ def increment_cart_item(request, item_id):
 def decrement_cart_item(request, item_id):
     cart_item = get_object_or_404(CartItem, id=item_id)
 
-   
     if cart_item.quantity > 1:
         cart_item.quantity -= 1
         cart_item.save()
@@ -430,62 +421,49 @@ def remove_cart_item(request, item_id):
 @login_required
 @third
 def generate_pdf_receipt(sale, served_by_username):
-   
+
     buffer = io.BytesIO()
 
-    
-    page_width = 250 
+    page_width = 250
     page_height = 500
 
-   
-    receipt_width = 200 
+    receipt_width = 200
 
-    
     x_centered = (page_width - receipt_width) / 2
 
-   
     x_left_aligned = 20
 
-   
     p = canvas.Canvas(buffer, pagesize=(page_width, page_height))
 
-   
     logo_path = 'https://healthtoday.co.ke/wp-content/uploads/2023/03/cropped-Logo-232x77.png'
-    logo_width = 100  
-    logo_height = 50 
+    logo_width = 100
+    logo_height = 50
     x_centered_logo = (page_width - logo_width) / 2
     p.drawInlineImage(logo_path, x_centered_logo, page_height -
                       20 - logo_height, width=logo_width, height=logo_height)
 
-    
     heading_text = "Health Today"
     heading_font_size = 16
     heading_y_position = page_height - 15 - logo_height - heading_font_size - 5
 
-   
     p.setFont("Helvetica-Bold", heading_font_size)
 
-    
     p.drawCentredString(page_width / 2, heading_y_position, heading_text)
 
-    
     p.setFont("Helvetica", 10)
 
-    
     shop_address = "St Ellis Building, City Hall Way, Nairobi"
     contact = "+254794085329 | info@healthtoday.co.ke "
     sale_date = sale.sale_date.strftime("Date: %Y-%m-%d %H:%M:%S")
     shop_pin = "Shop PIN: P0513834130"
     sale_id = f"CASH SALE: {sale.id:04d}"
 
-   
     address_y_position = page_height - 100
     contact_y_position = address_y_position - 15
     date_y_position = contact_y_position - 15
     pin_y_position = date_y_position - 15
     sale_id_y_position = pin_y_position - 15
 
-   
     draw_left_aligned_text(p, shop_address, x_left_aligned,
                            address_y_position, "Helvetica", 10)
     draw_left_aligned_text(p, contact, x_left_aligned,
@@ -497,71 +475,57 @@ def generate_pdf_receipt(sale, served_by_username):
     draw_left_aligned_text(p, sale_id, x_left_aligned,
                            sale_id_y_position, "Helvetica", 10)
 
-   
     dotted_line_y_position = sale_id_y_position - 10
-    p.setDash(3, 3)  
+    p.setDash(3, 3)
     p.line(x_left_aligned, dotted_line_y_position,
            x_left_aligned + receipt_width, dotted_line_y_position)
 
-    
-    p.setFont("Helvetica", 10) 
+    p.setFont("Helvetica", 10)
 
-    
     sales_details = [
         ["Item", "Price", "Amount"]
     ]
 
-    
     for sale_item in SaleItem.objects.filter(sale=sale):
         product_name = sale_item.product.title
         unit_price = sale_item.unit_price
         quantity = sale_item.quantity_sold
         total_price = sale_item.quantity_sold * unit_price
 
-        
         detail = [product_name, "", ""]
 
         sales_details.append(detail)
 
-        
         detail_quantity = [f"{quantity} x",
                            f"{unit_price:.2f}", f"{total_price:.2f}"]
         sales_details.append(detail_quantity)
 
-    
     sales_details_y_position = dotted_line_y_position - 25
 
-    
     table = Table(sales_details, colWidths=[90, 40, 50], rowHeights=15)
     table.setStyle(TableStyle([
-       
+
         ('LEFTPADDING', (0, 0), (-1, -1), 10),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),  
-        
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+
         ('TEXTCOLOR', (0, 0), (-1, 0), (0, 0, 0)),
     ]))
 
-    
     table_x_position = x_left_aligned
 
-    
-    table_height = len(sales_details) * 15  
+    table_height = len(sales_details) * 15
 
-    
     if sales_details_y_position - table_height < 0:
         sales_details_y_position = table_height
 
-    
     table.wrapOn(p, page_width, page_height)
     table.drawOn(p, table_x_position, sales_details_y_position - table_height)
 
-    
     total_vat_y_position = sales_details_y_position - table_height - 25
     total_payable_y_position = total_vat_y_position - 15
     discount_y_position = total_payable_y_position - 15
     total_paid_y_position = discount_y_position - 15
 
-    
     total_vat_text = f"VAT: {sale.vat:.2f}"
     total_payable_text = f"Total: {sale.total_amount:.2f}"
     discount_text = f"Discount: {sale.discount:.2f}"
@@ -576,36 +540,28 @@ def generate_pdf_receipt(sale, served_by_username):
     draw_left_aligned_text(p, total_paid_text, x_left_aligned,
                            total_paid_y_position, "Helvetica", 10)
 
-    
-    p.setDash(3, 3)  
+    p.setDash(3, 3)
     p.line(x_left_aligned, total_paid_y_position - 10,
            x_left_aligned + receipt_width, total_paid_y_position - 10)
 
-    
     served_by_y_position = total_paid_y_position - 20
     draw_left_aligned_text(
         p, f"You were served by: {served_by_username}", x_left_aligned, served_by_y_position, "Helvetica", 10)
 
-    
     formatted_sale_id = f"{sale.id:04d}"
 
-    
     barcode_image = generateBarcodeImage(formatted_sale_id)
 
-    
-    barcode_width = 100  
+    barcode_width = 100
     barcode_x_position = x_centered + (receipt_width - barcode_width) / 2
-    barcode_y_position = served_by_y_position - 60  
+    barcode_y_position = served_by_y_position - 60
 
-    
     p.drawImage(barcode_image, barcode_x_position,
                 barcode_y_position, width=barcode_width, height=50)
 
-    
     p.showPage()
     p.save()
 
-  
     buffer.seek(0)
 
     # Create a response
@@ -614,13 +570,14 @@ def generate_pdf_receipt(sale, served_by_username):
 
     return response
 
+
 def draw_left_aligned_text(pdf_canvas, text, x_position, y_position, font_name, font_size):
     pdf_canvas.setFont(font_name, font_size)
     pdf_canvas.drawString(x_position, y_position, text)
 
 
 def generateBarcodeImage(data):
-   
+
     barcode = generate('Code128', str(
         data), writer=ImageWriter(), output='barcode_image')
     return barcode
@@ -642,7 +599,8 @@ def send_checkout_notification(user, sale):
         custom_recipient_email = notification_instance.receiver or custom_recipient_email
         cc_email = notification_instance.cc or cc_email
 
-    products_sold = ', '.join([item.product.title for item in sale.saleitem_set.all()])
+    products_sold = ', '.join(
+        [item.product.title for item in sale.saleitem_set.all()])
 
     message = (
         f"Sale Details:\n\n"
@@ -656,7 +614,8 @@ def send_checkout_notification(user, sale):
         f"Sold By: {sale.user.username}\n"
     )
 
-    email = EmailMessage(subject, message, sender_email, [custom_recipient_email], cc=[cc_email])
+    email = EmailMessage(subject, message, sender_email, [
+                         custom_recipient_email], cc=[cc_email])
 
     try:
         email.send(fail_silently=False)
@@ -664,18 +623,16 @@ def send_checkout_notification(user, sale):
         print(f"Failed to send notification email: {e}")
 
 
-
 @login_required
 @third
 @transaction.atomic
 def checkout(request):
     try:
-      
+
         user_cart = get_object_or_404(Cart, user=request.user)
 
-       
         if user_cart.products.exists():
-          
+
             if user_cart.add_vat:
                 vat_rate = Decimal(0.16)  # 16% VAT
                 vat_amount = user_cart.total_cost * vat_rate
@@ -724,7 +681,6 @@ def checkout(request):
             user_cart.save()
 
             send_checkout_notification(request.user, sale)
-           
 
             # Update the Day model for the current day
             sale_date = sale.sale_date.date()
@@ -738,8 +694,6 @@ def checkout(request):
             current_day.sales.add(sale)
             current_day.sales_amount += sale.total_amount
             current_day.save()
-
-
 
             # Generate the PDF receipt
 
@@ -1002,8 +956,30 @@ def expiring(request):
 @login_required
 @third
 def receivings(request):
-    receivings_list = Receiving.objects.all()
-    return render(request, 'pos/receivings.html', {'receivings_list': receivings_list})
+    receivings_list = Receiving.objects.all().order_by('-received_date')
+
+    title_query = request.GET.get('title')
+
+    if title_query:
+        receivings_list = Receiving.objects.filter(
+            Q(supplier__name__icontains=title_query) |
+            Q(product__title__icontains=title_query)
+        )
+
+    # Paginate the receivings_list by 20 items per page
+    paginator = Paginator(receivings_list, 20)
+    page_number = request.GET.get('page')
+
+    try:
+        receivings_page = paginator.page(page_number)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        receivings_page = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range, deliver last page of results.
+        receivings_page = paginator.page(paginator.num_pages)
+
+    return render(request, 'pos/receivings.html', {'receivings_page': receivings_page})
 
 
 @login_required
@@ -1118,3 +1094,84 @@ def export_cataloque(request, cataloque_id):
     p.build(story)
 
     return response
+
+
+@third
+def cashup(request):
+    today = timezone.now().date()
+    existing_cashup = Cashup.objects.filter(date=today).first()
+    # uncashed_up_sales = Sale.objects.filter(cashed_up=True)
+    # uncashed_up_sales.update(cashed_up=False)
+    uncashed_up_sales = Sale.objects.filter(cashed_up=False)
+    total_sales = sum(s.total_amount for s in uncashed_up_sales)
+
+    stock_value = calculate_stock_value()
+    print("stock Value:", stock_value)
+
+    print("Total Sales:", total_sales)
+    if existing_cashup:
+        messages.error(
+            request, "You can only cash up once on a business day.")
+        return redirect('pos:index')
+    # Check if a cash-up for today already exists
+
+    if request.method == 'POST':
+        form = CashupForm(request.POST)
+        if form.is_valid():
+
+            # Retrieve expenses entered by the user from the form
+            expenses = form.cleaned_data['expenses']
+            cash_at_hand = form.cleaned_data['cash_at_hand']
+            value_before_cashup = stock_value + total_sales
+
+            # Check if cash at hand matches total sales minus expenses
+            if cash_at_hand != total_sales - expenses:
+                messages.error(
+                    request, "Please double-check your sales and try again")
+                return redirect('pos:cashup')
+
+            # Create the cash-up
+            cashup = Cashup.objects.create(
+                staff=request.user,
+                total_sales=total_sales,
+                expenses=expenses,
+                cash_at_hand=cash_at_hand,
+                stock_value_before_cashup=value_before_cashup,
+                stock_value_after_cashup=stock_value
+
+            )
+
+            # Update the cashed up status of sales
+            uncashed_up_sales.update(cashed_up=True)
+
+            messages.success(request, "Operation Successful")
+            return redirect('pos:index')
+    else:
+        # If it's a GET request, initialize the form
+        form = CashupForm()
+
+    return render(request, 'pos/cashup.html', {'form': form, 'date': today})
+
+
+def calculate_stock_value():
+    # Calculate stock value by summing up the product of each product's price and quantity
+    products = Product.objects.all()
+    stock_value = sum(product.price * product.quantity for product in products)
+    return stock_value
+
+
+def cashups(request):
+    cashups = Cashup.objects.all()
+
+    context = {
+        'cashups': cashups
+    }
+    return render(request, 'pos/cashups.html', context)
+
+
+def cashup_detail(request, cashup_id):
+    cashup = get_object_or_404(Cashup, pk=cashup_id)
+    context = {
+        'c': cashup
+    }
+    return render(request, 'pos/cashup_detail.html', context)

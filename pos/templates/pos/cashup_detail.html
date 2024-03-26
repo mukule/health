@@ -1,0 +1,60 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid-lg">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-flex align-items-center justify-content-center">
+                    <h4 class="mb-0 font-size-18" style="color: #F5772B;">Activities on {{c.date}}</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="card">
+                    <div class="card-body">
+                        {% if c %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        
+                                        <th>Staff</th>
+                                        <th>Opening Stock Value(ksh)</th>
+                                        <th>Total Sales (ksh)</th>
+                                        <th>Expenses (Ksh)</th>
+                                        <th>Amount Closed with (Ksh)</th>
+                                        <th>Clossing stock Value (Ksh)</th>
+                                        
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    
+                                       
+                                            <tr>
+                                               
+                                                <td>{{ c.staff }}</td>
+                                                <td>{{ c.stock_value_before_cashup }}</td>
+                                                <td>{{ c.total_sales }}</td>
+                                                <td>{{ c.expenses }}</td>
+                                                <td>{{ c.cash_at_hand }}</td>
+                                                <td>{{ c.stock_value_after_cashup }}</td>
+                                            </tr>
+                                   
+                                </tbody>
+                            </table>
+                        </div>
+                        {% endif %}
+                        
+                    </div>
+                    <!-- end card-body-->
+                </div>
+                <!-- end card -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

@@ -3,25 +3,43 @@
 
 {% block content %}
 <div class="page-content">
-    <div class="container-fluid">
+    <div class="container-fluid-lg">
         <div class="row">
             <div class="col-12">
-                <div class="page-title-box d-flex align-items-center justify-content-between">
-                    <h4 class="mb-0 font-size-18">Products Received</h4>
+                <div class="page-title-box d-flex align-items-center justify-content-center">
+                    <h4 class="mb-0 font-size-18" style="color: #F5772B;">Products Receivings</h4>
                 </div>
             </div>
-        </div>  
+        </div>
 
         <div class="row">
             <div class="col-xl-12">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="card-title mb-4">Receivings</h4>
-        
+                        <div class="row justify-content-center">
+                            <div class="col-md-6">
+                                <form method="GET" class="mb-3 ml-2">
+                                    <div class="input-group">
+                                        <input type="text" name="title" class="form-control form-control-lg" placeholder="Search Supplier Name or Product Name">
+                                        <div class="input-group-append ml-2">
+                                            <button type="submit" class="btn btn-primary">Search</button>
+                                            {% if query %}
+                                            <a href="{% url 'product:suppliers' %}" class="btn btn-primary ml-2">Show all</a>
+                                            {% endif %}
+
+                                            <a href="{% url 'product:receivings' %}" class="btn btn-primary ml-2">Receive Products</a>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
                         <div class="table-responsive">
                             <table class="table table-hover mb-0">
                                 <thead>
-                                    <tr> <th>Supplier</th>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Supplier</th>
                                         <th>Product</th>
                                         <th>Quantity</th>
                                         <th>Unit Price</th>
@@ -31,10 +49,11 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for receiving in receivings_list %}
+                                    {% for receiving in receivings_page %}
                                         {% for received_product in receiving.receivedproduct_set.all %}
                                             <tr>
-                                                 <td>{{ receiving.supplier.name }}</td>
+                                                <td>{{ forloop.parentloop.counter }}</td>
+                                                <td>{{ receiving.supplier.name }}</td>
                                                 <td>{{ received_product.product.title }}</td>
                                                 <td>{{ received_product.product_quantity }}</td>
                                                 <td>Ksh {{ received_product.unit_price }}</td>
@@ -45,24 +64,19 @@
                                         {% endfor %}
                                     {% empty %}
                                         <tr>
-                                            <td colspan="6">No products received</td>
+                                            <td colspan="8">No products received</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
-                            
                         </div>
-                        <div class="text-center mt-3">
-                            <a href="{% url 'product:receivings' %}" class="btn btn-primary">Receive Products</a>
-                        </div>
+                        
                     </div>
                     <!-- end card-body-->
                 </div>
                 <!-- end card -->
             </div>
-
         </div>
-        
     </div>
 </div>
 {% endblock content %}

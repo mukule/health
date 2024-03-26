@@ -17,17 +17,9 @@
                                             <i class="fas fa-user-alt"></i>
                                         </a>
                                     </div>
-                                    <h1 class="h5 mb-4 text-center">Create New staff</h1>
+                                    <h1 class="h5 mb-4 text-center">Update {{user.username}}'s Details</h1>
                                     <form method="POST">
                                         {% csrf_token %}
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                {{ form.username|as_crispy_field }}
-                                            </div>
-                                            <div class="col-md-6">
-                                                {{ form.email|as_crispy_field }}
-                                            </div>
-                                        </div>
                                         <div class="row">
                                             <div class="col-md-6">
                                                 {{ form.first_name|as_crispy_field }}
@@ -36,18 +28,28 @@
                                                 {{ form.last_name|as_crispy_field }}
                                             </div>
                                         </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                {{ form.email|as_crispy_field }}
+                                            </div>
+                                            <div class="col-md-6">
+                                                {{ form.access_level|as_crispy_field }}
+                                            </div>
+                                        </div>
+                                       
                                        
                                         <div class="row">
                                             <div class="col-md-6">
-                                                {{ form.password1|as_crispy_field }}
+                                                {{ form.password|as_crispy_field }}
                                             </div>
                                             <div class="col-md-6">
-                                                {{ form.password2|as_crispy_field }}
+                                                {{ form.confirm_password|as_crispy_field }}
                                             </div>
+                                            
                                         </div>
                                         <div class="row">
                                             <div class="col-md-12">
-                                                {{ form.access_level|as_crispy_field }}
+                                                {{ form.is_active|as_crispy_field }}
                                             </div>
                                         </div>
                                         <div class="form-group">
@@ -56,7 +58,7 @@
                                     </form>
                                     <div class="row mt-4">
                                         <div class="col-12 text-center">
-                                            <p class="text-muted mb-0">Use a simple password such as (Password@2023) so the staff can change later</p>
+                                            <p class="text-muted mb-0">Enter Password only when you are changing the current Password</p>
                                         </div>
                                     </div>
                                 </div>

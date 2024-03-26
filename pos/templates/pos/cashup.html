@@ -1,0 +1,38 @@
+{% extends 'main/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-12 col-lg-12">
+                <div class="card shadow-lg p-3 mb-5 bg-white rounded">
+                    <div class="card-body">
+                        <h2 class="card-title text-center">Create Cash up for {{date}}</h2>
+                        <p class="card-sub_title text-warning text-center">Please Note that this can not be Reversed and any other Transaction Done after this will be considered for the Next Day</p>
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-md-4">
+                                    {{ form.total_sales|as_crispy_field }}
+                                </div>
+                                <div class="col-md-4">
+                                    {{ form.expenses|as_crispy_field }}
+                                </div>
+                                <div class="col-md-4">
+                                    {{ form.cash_at_hand|as_crispy_field }}
+                                </div>
+                            </div>
+                          
+                           
+                           <button type="submit" class="btn btn-primary btn-block">Cash Up</button>
+                           
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
